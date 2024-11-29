@@ -1,0 +1,141 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build C++ file",
+            "type": "cppbuild",
+            "command": "g++",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-std=c++20",
+                "-g",
+                "${file}",
+                "-o",
+                "${workspaceFolder}/tmp/tmp.exe"
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "g++: compile current active file",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "dedicated",
+                "showReuseMessage": true,
+                "clear": true
+            }
+        },
+        {
+            "label": "build C++ multi files",
+            "type": "cppbuild",
+            "command": "g++",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-std=c++20",
+                "-g",
+                "${fileDirname}/*.cpp",
+                "-I",
+                "${fileDirname}/include",
+                "-I",
+                "${fileDirname}/../include",
+                "-o",
+                "${workspaceFolder}/tmp/tmp.exe",
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build",
+            "detail": "g++: compile multi-files in current dir.",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "dedicated",
+                "showReuseMessage": true,
+                "clear": true
+            }
+        },
+
+
+        {
+            "label": "build C file",
+            "type": "cppbuild",
+            "command": "gcc",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-std=gnu11", 
+                // "-O0",
+                // "-Werror",
+                // "-Wall",
+                // "-Wdiv-by-zero",
+                "-g",
+                "${file}",
+                "-o",
+                "${workspaceFolder}/tmp/tmp.exe"
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "gcc: compile current active file",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "dedicated",
+                "showReuseMessage": true,
+                "clear": true
+            }
+        },
+        {
+            "label": "build C multi files",
+            "type": "cppbuild",
+            "command": "gcc",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-std=gnu11",
+                "-g",
+                "${fileDirname}/*.c",
+                "-I",
+                "${fileDirname}/include",
+                "-I",
+                "${fileDirname}/../include",
+                "-o",
+                "${workspaceFolder}/tmp/tmp.exe",
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build",
+            "detail": "g++: compile multi-files in current dir.",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "dedicated",
+                "showReuseMessage": true,
+                "clear": true
+            }
+        },
+    ],
+}

@@ -1,0 +1,25 @@
+CompileFlags:
+  # Add: [-Wall, -Wextra, -Werror]
+  Add: [-Wall]
+
+
+InlayHints:
+  Enabled: No
+  Designators: No
+
+
+---
+
+If:
+  PathMatch: [.*\.cpp$]
+CompileFlags:
+  Add:
+  - "-std=c++20"
+
+---
+
+If:
+  PathMatch: [.*\.c$]
+CompileFlags:
+  Add:
+    - "-std=gnu11"
