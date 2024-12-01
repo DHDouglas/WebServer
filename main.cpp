@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
 
     // // 运行
     // server.eventLoop(); 
-    WebServer server(8080, false); 
+    WebServer server(8080, false, 6); 
 
     // 初始化, 开启监听, epoll事件. 
     server.eventListen(); 

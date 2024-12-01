@@ -1,4 +1,5 @@
 #include "webserver.h"
+#include "http/http_conn.h"
 #include <asm-generic/socket.h>
 #include <cerrno>
 #include <cstdlib>
@@ -9,12 +10,21 @@
 #include <netinet/in.h>
 #include <cassert>
 #include <cstring>
+#include <arpa/inet.h>
 
 
 
 
-WebServer::WebServer(int port, bool opt_linger): m_port(port), m_OPT_LINGER(opt_linger) {
+WebServer::WebServer(int port, bool opt_linger, int num_threads)
+: m_port(port), m_OPT_LINGER(opt_linger), m_threadpool(std::make_unique<ThreadPool>(num_threads)) {
     printf("Initialize Server\n"); 
+    
+}
+
+WebServer::~WebServer() {
+    // close(m_listenfd);
+    // close(m_epollfd); 
+
 }
 
 
@@ -90,6 +100,7 @@ void WebServer::eventLoop() {
             break;
         }
 
+        printf("process\n");
         for (int i = 0; i < nfds; ++i) {
             /* 根据事件来源, 区分几种情况:
              * 来自监听描述符listn_fd: 新连接, 需调用accept
@@ -98,16 +109,20 @@ void WebServer::eventLoop() {
              */
             int fd = events[i].data.fd;  // 发生事件的描述符
             if (fd == m_listenfd) {      // 监听描述符有新事件
-                // 处理新连接
+                // 处理新连接(此处连接建立过程仍然由主线程完成, 没有分配给线程池中工作线程). 
                 if (false == deal_conn()) {
                     continue;
                 }
+            } else if (events[i].events & (EPOLLHUP | EPOLLRDHUP | EPOLLERR)) {
+                // 断开连接
+                close_conn(fd); 
+                
             } else if (events[i].events & EPOLLIN) {
                 // 处理客户端发来的数据; 
-                deal_read();  
-            }   
+                deal_read(fd);  
+            }
         }
-
+        sleep(2); 
         // 处理定时. 
     }
 }
@@ -118,7 +133,6 @@ bool WebServer::deal_conn() {
     // 1) 调用accept建立连接, 返回conn_fd; 
     // 2) 将conn_fd设置为非阻塞;
     // 3) 将conn_fd添加到epoll实例中, 进行监听. 
-
     struct sockaddr_in addr; 
     socklen_t addr_len = sizeof(sockaddr_in); 
 
@@ -128,17 +142,55 @@ bool WebServer::deal_conn() {
         return false; 
     }
 
-    utils.setnonblockling(conn_fd); 
-
+    // 将conn_fd将入监听, 并设置为非阻塞. 
     epoll_event ev {0};
     ev.events = EPOLLIN; 
     ev.data.fd = conn_fd; 
     epoll_ctl(m_epollfd, EPOLL_CTL_ADD, conn_fd, &ev); 
+    utils.setnonblockling(conn_fd); 
 
+    // 为该连接关联一个HttpConn实例. 
+    m_users[conn_fd].init(); 
+
+
+    // 打印客户端的IP地址和端口号. 
+    int buf_size = 1024; 
+    char buffer[buf_size]; 
+    printf("Connection from:  %s:%d\n", 
+        inet_ntop(AF_INET, &addr.sin_addr, buffer, sizeof(buffer)), 
+        ntohs(addr.sin_port));
     return true;
 }
 
 
-void WebServer::deal_read() {
-    printf("gggg\n");
+void WebServer::close_conn(int fd) {
+    printf("Close fd: %d\n", fd); 
+    epoll_ctl(m_epollfd, EPOLL_CTL_DEL, fd, NULL);  // 从epoll实例中移除对该描述符的监听. 
+    close(fd); 
+}
+
+
+void WebServer::deal_read(int fd) {
+    // 检测到读事件, 将事件放入线程池的请求队列. 
+    m_threadpool->submit([fd]() -> void{ 
+        printf("gggg\n"); 
+        const char* str = "Hello world"; 
+        send(fd, str, strlen(str), 0);  
+    });
+
+    printf("Received: \n");
+    // int buf_size = 1024; 
+    // char buffer[buf_size]; 
+    // ssize_t n = read(fd, buffer, buf_size); 
+    // buffer[n] = '\0'; 
+    // printf("%s\n", buffer);
+    // const char* str = "Hello world"; 
+    // send(fd, str, strlen(str), 0);  
+}
+
+void WebServer::deal_write(int fd) {
+    // 向线程池中插入写任务. 
+    // 应该向线程池里存入哪些任务? 针对Http协议, 应当封装一个Http对象, 涵盖所有请求? 
+    // threadpool->AddTask(); 
+
 }
