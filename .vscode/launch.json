@@ -100,5 +100,29 @@
                 }
             ]
         }, 
+        // cpp 测试
+        {
+            "name": "C++ (Test)",
+            "preLaunchTask": "build c++ test program",  
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/tmp/test.exe",
+            "args": [],
+            "stopAtEntry": false,
+            // "cwd": "${workspaceFolder}",
+            "cwd": "${fileDirname}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerPath": "/usr/bin/gdb", 
+            "miDebuggerArgs": "-q -ex quit; wait() { fg >/dev/null; }; /bin/gdb -q --interpreter=mi",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true,
+                }
+            ]
+        }, 
     ]
 }

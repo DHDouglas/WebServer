@@ -22,6 +22,8 @@ public:
     void deal_read(int fd); 
     void deal_write(int fd); 
     void close_conn(int fd); 
+    void OnRead_(HttpConn* conn); 
+    void OnWrite(HttpConn* conn); 
 
 
 private:

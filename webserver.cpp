@@ -115,7 +115,7 @@ void WebServer::eventLoop() {
                 }
             } else if (events[i].events & (EPOLLHUP | EPOLLRDHUP | EPOLLERR)) {
                 // 断开连接
-                close_conn(fd); 
+                // close_conn(fd); 
                 
             } else if (events[i].events & EPOLLIN) {
                 // 处理客户端发来的数据; 
@@ -150,7 +150,7 @@ bool WebServer::deal_conn() {
     utils.setnonblockling(conn_fd); 
 
     // 为该连接关联一个HttpConn实例. 
-    m_users[conn_fd].init(); 
+    m_users[conn_fd].init(conn_fd, addr); 
 
 
     // 打印客户端的IP地址和端口号. 
@@ -171,26 +171,56 @@ void WebServer::close_conn(int fd) {
 
 
 void WebServer::deal_read(int fd) {
-    // 检测到读事件, 将事件放入线程池的请求队列. 
-    m_threadpool->submit([fd]() -> void{ 
-        printf("gggg\n"); 
-        const char* str = "Hello world"; 
-        send(fd, str, strlen(str), 0);  
-    });
+    // 检测到读事件, 将"处理函数"放入线程池的请求队列. 
+    HttpConn* conn = &m_users[fd]; 
+    m_threadpool->submit(&WebServer::OnRead_, this, conn); 
 
-    printf("Received: \n");
-    // int buf_size = 1024; 
-    // char buffer[buf_size]; 
-    // ssize_t n = read(fd, buffer, buf_size); 
-    // buffer[n] = '\0'; 
-    // printf("%s\n", buffer);
-    // const char* str = "Hello world"; 
-    // send(fd, str, strlen(str), 0);  
+    // m_threadpool->submit([fd]() -> void{ 
+    //     int buf_size = 1024; 
+    //     char buffer[buf_size]; 
+    //     ssize_t n = read(fd, buffer, buf_size); 
+    //     buffer[n] = '\0'; 
+    //     printf("Received: \n");
+    //     printf("%s\n", buffer);
+    //     const char* str = "Hello world"; 
+    //     send(fd, str, strlen(str), 0);  
+    // });
 }
+
 
 void WebServer::deal_write(int fd) {
     // 向线程池中插入写任务. 
-    // 应该向线程池里存入哪些任务? 针对Http协议, 应当封装一个Http对象, 涵盖所有请求? 
     // threadpool->AddTask(); 
 
+}
+
+
+void WebServer::OnRead_(HttpConn* conn) {
+    // FIXME: 应当封装作为HttpTask, 下述处理流程, 应当是和Http对象绑定的, 和WebServer无关系. 
+    // 
+    // 处理函数应完成下述工作:
+    // 1) 从fd中读取数据, 到HttpConn的读缓冲区中; 
+    // 2) 读取缓冲区中数据, 进行解析; 
+    // 3) 根据解析结果, 执行相应处理; 
+    // 4) 构造响应报文, 将响应报文写入HttpConn的"写缓冲区". 
+    // 5) 将sockfd的监听改为EPOLLOUT事件. 
+    int ret = 0; 
+    int readErrno = 0;
+    ret = conn->read(&readErrno);      // 上述1步, 读取数据到缓冲区; 
+    if (ret <= 0 && readErrno != EAGAIN) {
+        close_conn(conn->m_sockfd);   // 关闭链接
+        return;
+    }
+    // 上述2~4步
+    if (conn->process()) {
+        // 上述第5步
+        // epoll_event event; 
+        // event.events = EPOLLOUT; 
+        // epoll_ctl(m_epollfd, EPOLL_CTL_MOD, conn->m_sockfd, &event);
+    }  else {
+        // 这里有必要吗?? 如果process未成功, 那就仍然还是EPOLLIN, 应该不需要修改吧? 
+        epoll_event event; 
+        event.events = EPOLLIN; 
+        epoll_ctl(m_epollfd, EPOLL_CTL_MOD, conn->m_sockfd, &event);
+    }
 }

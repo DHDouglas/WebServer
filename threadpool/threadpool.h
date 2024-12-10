@@ -41,7 +41,7 @@ template<typename Func, typename... Args>
 auto ThreadPool::submit(Func&& f, Args&&... args) 
 -> std::future<std::invoke_result_t<Func, Args...>> {
     // 封装任务, 加入队列. 
-    using ReturnType = decltype(f(args...)); 
+    using ReturnType = typename std::result_of<Func(Args...)>::type; 
 
     auto ptr_task = std::make_shared<std::packaged_task<ReturnType()>>(
             std::bind(std::forward<Func>(f), std::forward<Args>(args)...)

@@ -1,6 +1,7 @@
 CompileFlags:
   # Add: [-Wall, -Wextra, -Werror]
-  Add: [-Wall]
+  Add: 
+    - -Wall
 
 
 InlayHints:
@@ -14,7 +15,7 @@ If:
   PathMatch: [.*\.cpp$]
 CompileFlags:
   Add:
-  - "-std=c++20"
+  - "-std=c++17"
 
 ---
 
