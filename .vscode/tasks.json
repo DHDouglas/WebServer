@@ -39,6 +39,39 @@
             "command": "g++",
             "args": [
                 "-fdiagnostics-color=always",
+                "-std=c++17",
+                "-g",
+                "${fileDirname}/*.cpp",
+                "-I",
+                "${fileDirname}/include",
+                "-I",
+                "${fileDirname}/../include",
+                "-o",
+                "${workspaceFolder}/tmp/tmp.exe",
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build",
+            "detail": "g++: compile multi-files in current dir.",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "dedicated",
+                "showReuseMessage": true,
+                "clear": true
+            }
+        },
+        {
+            "label": "build C++ project",
+            "type": "cppbuild",
+            "command": "g++",
+            "args": [
+                "-fdiagnostics-color=always",
                 "-std=c++20",
                 "-g",
                 "${fileDirname}/*.cpp",

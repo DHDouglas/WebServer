@@ -52,6 +52,30 @@
                 }
             ]
         }, 
+        // C++ 多文件编译
+        {
+            "name": "C++ (Project)",
+            "preLaunchTask": "build C++ project",  
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/tmp/tmp.exe",
+            "args": [],
+            "stopAtEntry": false,
+            // "cwd": "${workspaceFolder}",
+            "cwd": "${fileDirname}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerPath": "/usr/bin/gdb", 
+            "miDebuggerArgs": "-q -ex quit; wait() { fg >/dev/null; }; /bin/gdb -q --interpreter=mi",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true,
+                }
+            ]
+        }, 
         // C 单文件编译
         {
             "name": "C (Single File)",  // 配置名称，将会在启动配置的下拉菜单中显示 

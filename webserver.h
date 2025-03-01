@@ -34,7 +34,7 @@ private:
     bool m_OPT_LINGER;  // 是否开启 SO_LINGER套接字选项
 
     std::unique_ptr<ThreadPool> m_threadpool;  
-    std::unordered_map<int, HttpConn> m_users; 
+    std::unordered_map<int, HttpConn> m_users;  // HttpConn实例. 
 
     int m_listenfd;    // 监听描述符.
     int m_epollfd;     // epoll实例的描述符.

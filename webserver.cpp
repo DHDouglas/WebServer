@@ -115,14 +115,14 @@ void WebServer::eventLoop() {
                 }
             } else if (events[i].events & (EPOLLHUP | EPOLLRDHUP | EPOLLERR)) {
                 // 断开连接
-                // close_conn(fd); 
+                close_conn(fd); 
                 
             } else if (events[i].events & EPOLLIN) {
                 // 处理客户端发来的数据; 
                 deal_read(fd);  
             }
         }
-        sleep(2); 
+        // sleep(2); 
         // 处理定时. 
     }
 }
@@ -206,7 +206,7 @@ void WebServer::OnRead_(HttpConn* conn) {
     // 5) 将sockfd的监听改为EPOLLOUT事件. 
     int ret = 0; 
     int readErrno = 0;
-    ret = conn->read(&readErrno);      // 上述1步, 读取数据到缓冲区; 
+    ret = conn->read(&readErrno);      // 上述1步, 读取数据到缓冲区(内核缓冲区到用户缓冲区的过程会阻塞, 直至读取完毕)
     if (ret <= 0 && readErrno != EAGAIN) {
         close_conn(conn->m_sockfd);   // 关闭链接
         return;

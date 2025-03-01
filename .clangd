@@ -3,7 +3,6 @@ CompileFlags:
   Add: 
     - -Wall
 
-
 InlayHints:
   Enabled: No
   Designators: No
