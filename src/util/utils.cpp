@@ -7,7 +7,7 @@
 
 
 
-int Utils::setnonblockling(int fd) {
+int setnonblockling(int fd) {
     assert(fd > 0); 
     int flags;
     if ((flags = fcntl(fd, F_GETFL)) < 0) {

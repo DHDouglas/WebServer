@@ -1,0 +1,13 @@
+开发过程中的测试顺序:
+eventloop_test
+eventloop2_test
+channel_epoller_test
+thread_test
+timer_test
+timer_self_cancel_test
+pending_functor_in_loop_test
+eventloop_thread_test
+acceptor_test
+logfile_test
+logger_test
+asyclogging_test

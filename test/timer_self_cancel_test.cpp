@@ -16,7 +16,7 @@ void cancelSelf() {
 }
 
 void print(string msg, int& times) {
-    cout << "msg " << Timestamp::now().toString() << " " << msg << " x" << ++times << endl;
+    cout << "msg " << Timestamp::now().toFormattedString() << " " << msg << " x" << ++times << endl;
 }
 
 int main() {

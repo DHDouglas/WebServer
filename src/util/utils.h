@@ -1,8 +1,4 @@
 
-class Utils {
-public:
 
-    int setnonblockling(int fd); 
+int setnonblockling(int fd); 
 
-
-};

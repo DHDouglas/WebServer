@@ -13,11 +13,11 @@ EventLoop* g_loop;
 
 void print_tid() {
     cout << "pid = " << getpid() << ", tid = " << this_thread::get_id(); 
-    cout << "now: " << Timestamp::now().toString() << endl; 
+    cout << "now: " << Timestamp::now().toFormattedString() << endl; 
 }
 
 void print(string msg, int& times) {
-    cout << "msg " << Timestamp::now().toString() << " " << msg << " x" << ++times << endl;
+    cout << "msg " << Timestamp::now().toFormattedString() << " " << msg << " x" << ++times << endl;
     if (++cnt == 20) {
         g_loop->quit(); 
     }

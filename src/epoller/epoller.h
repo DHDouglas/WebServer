@@ -8,6 +8,7 @@
 #include <cassert>
 
 #include "channel.h"
+#include "logger.h"
 
 class EventLoop;
 
@@ -21,15 +22,23 @@ public:
     Epoller(EventLoop* loop);
     ~Epoller(); 
     void poll(int timeoutMs, ChannelList* activeChannels); 
-    void fillActiveChannels(int nfds, ChannelList* activeChannels) const;        // 将events_中活动fd填入activeChannels.
 
+    bool hasChannel(Channel* channel); 
     int getEpollFd() const; 
-    void epollMod(Channel* channel);   // 注册fd及其channel
-    void epollAdd(Channel* channel);   // 更新fd及其channel
-    void epollDel(Channel* channel); 
+    void updateChannel(Channel* channel);  // 更新fd及其channel
+    void removeChannel(Channel* channel); 
     void assertInLoopThread() const; 
 
+
 private:
+    enum Operator { ADD, MOD, DELETE }; 
+    void epollUpdate(int epoll_op, Channel* channel); 
+    void fillActiveChannels(int nfds, ChannelList* activeChannels) const;        // 将events_中活动fd填入activeChannels.
+
+
+private:
+    static const int kInitEventListSize = 16; 
+
     EventLoop* owner_loop_;
     int epoll_fd_;            // epoll 实例
     EventList events_;        // 供epoll_wait使用的epoll_event数组

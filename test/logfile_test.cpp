@@ -17,7 +17,7 @@ void flushFunc() {
   g_logFile->flush();
 }
 
-int main(int argc, char* argv[])
+int main(int, char* argv[])
 {
   char name[256] = { '\0' };
   strncpy(name, argv[0], sizeof name - 1);

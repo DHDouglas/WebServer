@@ -13,21 +13,20 @@ TimerManager::TimerManager(EventLoop* loop)
     timers_()
 {   
     // 设置timerfd的回调
-    timerfd_channel_.setReadCallBack(bind(&TimerManager::handleExpiredTimer, this));
-    timerfd_channel_.setEvents(EPOLLIN | EPOLLPRI); 
-    timerfd_channel_.addToEpoller(); 
+    timerfd_channel_.setReadCallback(bind(&TimerManager::handleExpiredTimer, this));
+    timerfd_channel_.enableReading(); 
 };
 
 TimerManager::~TimerManager() {
-    timerfd_channel_.delFromEpoller();
+    timerfd_channel_.disableAll(); 
+    timerfd_channel_.removeFromEpoller(); 
     close(timerfd_);
 }
 
 int TimerManager::create_timerfd() {
     int tfd = timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK | TFD_CLOEXEC); 
     if (tfd < 0) {
-        perror("Failed in timerfd_create"); 
-        abort(); 
+        LOG_SYSFATAL << "TimerManager::create_timerfd() timerfd_create";
     }
     return tfd; 
 }
@@ -68,8 +67,7 @@ void TimerManager::handleExpiredTimer() {
     uint64_t clicks; 
     ssize_t n = read(timerfd_, &clicks, sizeof(clicks)); 
     if (n != sizeof(clicks)) {
-        perror("TimeManager::handleExpired read"); 
-        abort();
+        LOG_SYSFATAL << "TimerManager::handleExpiredTimer() read";
     }
     // 3.从set中获取&移除已到期的定时器列表, 记入expired.
     vector<Entry> expired; 
@@ -113,8 +111,7 @@ void TimerManager::checkUpdateTimerfd() {
     memset(&new_value, 0, sizeof(new_value));
     new_value.it_value = ts;
     if (timerfd_settime(timerfd_, 0, &new_value, nullptr) < 0) {
-        perror("TimerManager::checkUpdateTimerfd timerfd_settime"); 
-        abort();
+        LOG_SYSFATAL << "TimerManager::checkUpdateTimerfd() timerfd_settime";
     }
 }
 

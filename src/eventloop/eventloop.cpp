@@ -5,7 +5,7 @@
 
 using namespace std;
 
-thread_local EventLoop* EventLoop::loopInThisThread = nullptr; 
+thread_local EventLoop* EventLoop::t_loopInThisThread = nullptr; 
 
 static constexpr int kPollTimeMs = 10000;
 
@@ -13,32 +13,47 @@ EventLoop::EventLoop()
     : looping_(false), 
     quit_(false),
     calling_pending_functors_(false),
-    threadId_(this_thread::get_id()),
+    threadId_(CurrentThread::getTid()),
     epoller_(make_unique<Epoller>(this)), 
     timer_manager_(make_unique<TimerManager>(this)),
     wakeup_fd_(createEventfd()),
     wakeup_channel_(this, wakeup_fd_)
 {
-    assert(!loopInThisThread && "Each thread can only have one EventLoop instance!");
-    loopInThisThread = this;
-
-    wakeup_channel_.setReadCallBack(bind(&EventLoop::handleWakeUp, this));
-    wakeup_channel_.setEvents(EPOLLIN | EPOLLPRI); 
-    wakeup_channel_.addToEpoller(); 
+    LOG_DEBUG << "EventLoop created " << this << " in thread " << threadId_;
+    if (t_loopInThisThread) {
+        LOG_FATAL << "Another EventLoop " << t_loopInThisThread << " exists in this thread " << threadId_;
+    } else {
+        t_loopInThisThread = this;
+    }
+    wakeup_channel_.setReadCallback(bind(&EventLoop::handleWakeUp, this));
+    wakeup_channel_.enableReading(); 
 }
 
 EventLoop::~EventLoop() {
+    LOG_DEBUG << "EventLoop " << this << " of thread " << threadId_ 
+              << " destructs in thread " << CurrentThread::getTid();
     assert(!looping_); 
-    loopInThisThread = nullptr; // 保证当前线程可再持有EventLoop实例.
+    wakeup_channel_.disableAll(); 
+    wakeup_channel_.removeFromEpoller(); 
+    ::close(wakeup_fd_);  
+    t_loopInThisThread = nullptr; // 保证当前线程可再持有EventLoop实例.
 }
 
 
 bool EventLoop::isInLoopThread() {
-    return threadId_ == std::this_thread::get_id(); 
+    return threadId_ == CurrentThread::getTid(); 
+}
+
+void EventLoop::abortNotInLoopThread() {
+  LOG_FATAL << "EventLoop::abortNotInLoopThread - EventLoop " << this
+            << " was created in threadId_ = " << threadId_
+            << ", current thread id = " <<  CurrentThread::getTid();
 }
 
 void EventLoop::assertInLoopThread() {
-    assert(isInLoopThread() && "EventLoop can only be used in the thread that created it!");
+    if (!isInLoopThread()) {
+        abortNotInLoopThread(); 
+    }
 }
 
 void EventLoop::quit() {
@@ -53,15 +68,22 @@ void EventLoop::loop() {
     assertInLoopThread(); 
     looping_ = true;
     quit_ = false; 
+    LOG_TRACE << "EventLoop " << this << " start looping";
 
     while (!quit_) {
         active_channels_.clear(); 
         epoller_->poll(kPollTimeMs, &active_channels_); 
+        event_handling_ = true;
         for (auto& channel : active_channels_) {
-            channel->handleEvents(); 
+            current_active_channel_ = channel; 
+            current_active_channel_->handleEvents(); 
         }
+        current_active_channel_ = nullptr; 
+        event_handling_ = false; 
         doPendingFunctors();   
     }
+
+    LOG_TRACE << "EventLoop " << this << " stop looping";
     looping_ = false; 
 }
 
@@ -102,7 +124,7 @@ void EventLoop::wakeup() {
     uint64_t one = 1;
     ssize_t n = write(wakeup_fd_, &one, sizeof(one)); 
     if (n != sizeof(one)) {
-        perror("EventLoop:wakeup write");
+        LOG_ERROR << "EventLoop::wakeup() writes " << n << " bytes instead of 8";
     }
 }
 
@@ -110,23 +132,28 @@ void EventLoop::handleWakeUp() {
     uint64_t one = 1;
     ssize_t n = read(wakeup_fd_, &one, sizeof one); 
     if (n != sizeof one) {
-        perror("EventLoop:handleWakeUp error"); 
+        LOG_ERROR << "EventLoop::handleWakeUp() reads " << n << " bytes instead of 8";
     }
 }
 
-void EventLoop::addToEpoller(Channel* channel) {
+
+bool EventLoop::hasChannel(Channel* channel) {
+    assert(channel->getOwnerLoop() == this);
     assertInLoopThread(); 
-    epoller_->epollAdd(channel); 
+    return epoller_->hasChannel(channel); 
 }
 
-void EventLoop::modInEpoller(Channel* channel) {
+void EventLoop::updateChannelInEpoller(Channel* channel) {
+    assert(channel->getOwnerLoop() == this); 
     assertInLoopThread(); 
-    epoller_->epollMod(channel); 
+    epoller_->updateChannel(channel); 
 }
 
-void EventLoop::delInEpoller(Channel* channel) {
+
+void EventLoop::removeChannelFromEpoller(Channel* channel) {
+    assert(channel->getOwnerLoop() == this); 
     assertInLoopThread(); 
-    epoller_->epollDel(channel); 
+    epoller_->removeChannel(channel); 
 }
 
 
@@ -150,8 +177,7 @@ void EventLoop::removeTimer(const weak_ptr<Timer>& wk_ptr_timer) {
 int EventLoop::createEventfd() {
     int efd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC); 
     if (efd < 0) {
-        perror("eventfd");
-        abort(); 
+        LOG_SYSFATAL << "Failed in eventfd";
     }
     return efd;
 }

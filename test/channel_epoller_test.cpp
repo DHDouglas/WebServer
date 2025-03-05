@@ -23,16 +23,17 @@ int main() {
     int timerfd = timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK | TFD_CLOEXEC);
     // 创建channel, 绑定fd
     Channel channel(&loop, timerfd); 
-    channel.setReadCallBack(timeout);  // 注册read回调
-    int events = EPOLLIN | EPOLLPRI; 
-    channel.setEvents(events);    // 设置监听事件
-    channel.addToEpoller();       // 在其所属eventloop绑定的Epoller中注册. 
+    channel.setReadCallback(timeout);  // 注册read回调
+    channel.enableReading();           // 注册到epoll监听读事件
 
     struct itimerspec howlong;
     bzero(&howlong, sizeof howlong);
     howlong.it_value.tv_sec = 5;
     timerfd_settime(timerfd, 0, &howlong, NULL); 
     loop.loop(); 
+    // 从loop的epoller中移除channel. 否则channel析构时abort.
+    channel.disableAll(); 
+    channel.removeFromEpoller();
 
     close(timerfd);
 }

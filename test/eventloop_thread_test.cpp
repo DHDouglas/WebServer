@@ -8,6 +8,8 @@
 
 using namespace  std;
 
+/* 测试EvetLoopThread类的封装 */
+
 void runInThread()
 {
   cout << "runInThread(): pid = " << getpid() 

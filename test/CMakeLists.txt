@@ -1,0 +1,35 @@
+add_executable(eventloop1_test eventloop_test.cpp)
+target_link_libraries(eventloop1_test MyObjects)
+
+add_executable(eventloop2_test eventloop2_test.cpp)
+target_link_libraries(eventloop2_test MyObjects)
+
+add_executable(channel_epoller_test channel_epoller_test.cpp)
+target_link_libraries(channel_epoller_test MyObjects)
+
+add_executable(thread_test thread_test.cpp)
+target_link_libraries(thread_test MyObjects)
+
+add_executable(timer_test timer_test.cpp)
+target_link_libraries(timer_test MyObjects)
+
+add_executable(timer_self_cancel_test timer_self_cancel_test.cpp)
+target_link_libraries(timer_self_cancel_test MyObjects)
+
+add_executable(pending_functor_in_loop_test pending_functor_in_loop_test.cpp)
+target_link_libraries(pending_functor_in_loop_test MyObjects)
+
+add_executable(eventloop_thread_test eventloop_thread_test.cpp)
+target_link_libraries(eventloop_thread_test MyObjects)
+
+add_executable(acceptor_test acceptor_test.cpp)
+target_link_libraries(acceptor_test MyObjects)
+
+add_executable(logfile_test logfile_test.cpp)
+target_link_libraries(logfile_test MyObjects)
+
+add_executable(logger_test logger_test.cpp)
+target_link_libraries(logger_test MyObjects)
+
+add_executable(asynclogging_test asynclogging_test.cpp)
+target_link_libraries(asynclogging_test MyObjects)
