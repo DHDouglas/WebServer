@@ -11,26 +11,24 @@
 
 #include "eventloop.h"
 #include "channel.h"
+#include "inet_address.h"
 
 class Acceptor{ 
 public:
-    using NewConnectionCallBack = std::function<void(int connfd, struct sockaddr_in& addr)>; 
-    Acceptor(EventLoop* loop, int port);
+    using NewConnectionCallBack = std::function<void(int connfd, const InetAddress& addr)>; 
+    Acceptor(EventLoop* loop, const InetAddress& listen_addr);
     ~Acceptor(); 
 
 public:
-    void setNewConnCallBack(const NewConnectionCallBack& cb); 
+    void setNewConnCallback(const NewConnectionCallBack& cb); 
     int createSocketAndBind(); 
     void listen(); 
-    bool ifListening() const; 
+    bool isListening() const; 
     void handleAccept(); 
     
 private:
     EventLoop* loop_; 
-    std::string ip_; 
-    int port_;
-    struct sockaddr_in addr; 
-    int addr_len; 
+    InetAddress addr_; 
     int sockfd_; 
     Channel accept_channel_; 
     NewConnectionCallBack newConnCallBack_; 

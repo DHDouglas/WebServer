@@ -107,3 +107,5 @@ inline LogStream& Logger::stream() {
 #define LOG_FATAL    Logger(__FILE__, __LINE__, Logger::FATAL).stream()
 #define LOG_SYSERR   Logger(__FILE__, __LINE__, false).stream()
 #define LOG_SYSFATAL Logger(__FILE__, __LINE__, true).stream()
+
+const char* strerror_tl(int savedErrno);

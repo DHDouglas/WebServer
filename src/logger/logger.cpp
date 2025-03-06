@@ -28,13 +28,11 @@ const char* LogLevelName[Logger::NUM_LOG_LEVELS] = {
 // 缓存上次计算的日期时间字符串(精度到秒)
 thread_local time_t t_last_second; 
 thread_local char t_time[64];
-
 // 缓存errno错误信息
 thread_local char t_errnobuf[512];
 
-const char* strerror_tl(int savedErrno)
-{
-  return strerror_r(savedErrno, t_errnobuf, sizeof t_errnobuf);
+const char* strerror_tl(int savedErrno) {
+    return strerror_r(savedErrno, t_errnobuf, sizeof t_errnobuf);
 }
 
 Logger::Logger(SourceFile file, int line)

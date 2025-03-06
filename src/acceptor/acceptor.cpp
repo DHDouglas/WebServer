@@ -1,12 +1,13 @@
 #include "acceptor.h"
+#include <netinet/in.h>
+#include <sys/socket.h>
 
 
 using namespace std;
 
-Acceptor::Acceptor(EventLoop* loop, int port)
+Acceptor::Acceptor(EventLoop* loop, const InetAddress& listen_addr)
     : loop_(loop),
-    port_(port), 
-    addr_len(sizeof(addr)),
+    addr_(listen_addr), 
     sockfd_(createSocketAndBind()),
     accept_channel_(loop, sockfd_),
     listening_(false)
@@ -17,20 +18,20 @@ Acceptor::Acceptor(EventLoop* loop, int port)
 Acceptor::~Acceptor() {
     accept_channel_.disableAll();
     accept_channel_.removeFromEpoller();
-    close(sockfd_); 
+    ::close(sockfd_); 
 }
 
-void Acceptor::setNewConnCallBack(const NewConnectionCallBack& cb) {
+void Acceptor::setNewConnCallback(const NewConnectionCallBack& cb) {
     newConnCallBack_ = cb; 
 }
 
-bool Acceptor::ifListening() const {
+bool Acceptor::isListening() const {
     return listening_; 
 }
 
 int Acceptor::createSocketAndBind() {
     // 设置地址, 端口号等等属性. 
-    int listen_fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0); 
+    int listen_fd = socket(addr_.getFamily(), SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0); 
     if (listen_fd == -1) {
         LOG_SYSFATAL << "Acceptor::createSocketAndBind() socket"; 
     }
@@ -40,11 +41,7 @@ int Acceptor::createSocketAndBind() {
         LOG_SYSFATAL << "Acceptor::createSocketAndBind() setsockopt"; 
     }
 
-    memset(&addr, 0, addr_len); 
-    addr.sin_family = AF_INET; 
-    addr.sin_addr.s_addr = htonl(INADDR_ANY); 
-    addr.sin_port = htons(port_); 
-    if (bind(listen_fd, (struct sockaddr*)&addr, addr_len) < 0) {
+    if (bind(listen_fd, addr_.getSockAddr(), addr_.getAddrLen()) < 0) {
         close(listen_fd); 
         LOG_SYSFATAL << "Acceptor::createSocketAndBind() bind"; 
     }
@@ -64,11 +61,16 @@ void Acceptor::listen() {
 void Acceptor::handleAccept() {
     // 处理连接
     loop_->assertInLoopThread();
-    int connfd = ::accept4(sockfd_, (struct sockaddr*)&addr,
-        (socklen_t*)&addr_len, SOCK_NONBLOCK | SOCK_CLOEXEC);     
+    InetAddress peer_addr; 
+    struct sockaddr_in6 sockaddr6; 
+    socklen_t addr6len = static_cast<socklen_t>(sizeof(sockaddr6)); 
+    memset(&sockaddr6, 0, addr6len); 
+    int connfd = ::accept4(sockfd_, InetAddress::sockAddrCast(&sockaddr6),
+        &addr6len, SOCK_NONBLOCK | SOCK_CLOEXEC);
     if (connfd >= 0) {
         if (newConnCallBack_) {
-            newConnCallBack_(connfd, addr);  // 执行新连接的回调
+            peer_addr.setSockAddrInet6(sockaddr6); 
+            newConnCallBack_(connfd, peer_addr);  // 执行新连接的回调
         } else {
             close(connfd); 
         }

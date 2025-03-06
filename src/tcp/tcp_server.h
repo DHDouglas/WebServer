@@ -6,47 +6,64 @@
 #include <string>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <memory>
 
 #include "channel.h"
+#include "eventloop.h"
 #include "timestamp.h"
 #include "acceptor.h"
 #include "eventloop_thread.h"
 #include "tcp_connection.h"
 
+class Acceptor; 
+
 class TcpConnection;
 
 class TcpServer {
 public:
+    using Buffer = char; 
+    using ThreadInitCallback = std::function<void(EventLoop*)>; 
     using ConnectionCallback = std::function<void(const std::shared_ptr<TcpConnection>&)>;
-    using CloseCallback = ConnectionCallback;
+    using MessageCallback = std::function<void(const std::shared_ptr<TcpConnection>&, Buffer*, size_t n)>; 
     using WriteCompleteCallback = ConnectionCallback;
-    using MessageCallback = std::function<void(const std::shared_ptr<TcpConnection>&, Buffer*, Timestamp)>; 
-    using ConnectionMap = std::map<size_t, std::shared_ptr<TcpConnection>>;
+    using CloseCallback = ConnectionCallback;
+    using TcpConnectionPtr = std::shared_ptr<TcpConnection>; 
 
 public: 
-    TcpServer(EventLoop* loop, const struct sockaddr_in& addr);
+    TcpServer(EventLoop* loop, const InetAddress& addr, const std::string& name = "");
     ~TcpServer(); 
 
-    void start(); 
+    // Thread safe. Starts the server if it's not listening. Harmless to call it multiple times. 
+    void start();  
+    // Not thread safe.
     void setConnectionCallback(const ConnectionCallback& cb); 
+    // Not thread safe.
     void setMessageCallback(const MessageCallback& cb); 
 
-    void newConnection(int sockfd, const struct sockaddr_in& addr); 
+    // Not thread safe, but in loop.
+    void newConnection(int sockfd, const InetAddress& addr);  
+    // Thread safe.
+    void removeConnection(const TcpConnectionPtr& conn); 
+    // Not thread safe, but in loop.
+    void removeConnectionInLoop(const TcpConnectionPtr& conn); 
 
+
+private:
+    using ConnectionMap = std::map<std::string, TcpConnectionPtr>;
 
 private:
     EventLoop* loop_;   // the acceptor loop 
 
-    const int port_; 
-    // const std::string name_, 
+    const std::string ip_port_; 
+    const std::string name_;
 
     std::unique_ptr<Acceptor> acceptor_; 
-    std::shared_ptr<EventLoopThread> eventloop_thread_pool_; 
+    std::unique_ptr<EventLoopThread> eventloop_thread; 
+    // std::shared_ptr<EventLoopThreadPool> eventloop_thread_pool_; 
 
     ConnectionCallback connCallback_;
     MessageCallback msgCallback_;
     WriteCompleteCallback writeCompleteCallback_;
+    ThreadInitCallback threadInitCallback_; 
     std::atomic<bool> started_; 
     ConnectionMap connections_;
     size_t next_conn_id_; 

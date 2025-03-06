@@ -1,8 +1,9 @@
 #include "channel.h"
 #include "eventloop.h"
-#include <cassert>
-#include <cstdlib>
+#include <memory>
 
+
+using namespace std;
 
 Channel::Channel(EventLoop* loop, int fd) 
     : loop_(loop), 
@@ -10,16 +11,17 @@ Channel::Channel(EventLoop* loop, int fd)
     events_(0), 
     revents_(0),
     event_handling(false),
-    state_(StateInEpoll::NOT_EXIST)
+    state_(StateInEpoll::NOT_EXIST),
+    tied_(false)
 {
 
 }
 
 Channel::~Channel() {
-    assert(!event_handling);
+    assert(!event_handling);  // 事件处理期间不会析构. 
     assert(state_ == StateInEpoll::NOT_EXIST); 
     if (loop_->isInLoopThread()) {
-        assert(!loop_->hasChannel(this)); 
+        assert(!loop_->hasChannel(this));  
     }
 }
 
@@ -39,8 +41,25 @@ void Channel::setRevents(int evt) {
     revents_ = evt; 
 }
 
+void Channel::tie(const std::shared_ptr<void>& obj) {
+    tie_ = obj;
+    tied_ = true;
+}
+
 void Channel::handleEvents() {
+    std::shared_ptr<void> gurad;
+    if (tied_) {
+        // 若tie_对象仍存在, 则保证其在handleEvents执行期间存活, 不被销毁.
+        gurad = tie_.lock();  
+        if (gurad) handleEventWithGuard(); 
+    } else {
+        handleEventWithGuard();
+    }
+}
+
+void Channel::handleEventWithGuard() {
     event_handling = true; 
+    LOG_TRACE << reventsToString(); 
     if (revents_ & EPOLLERR) {
         if (errorCallback_) errorCallback_();
     }
@@ -129,4 +148,25 @@ void Channel::setErrorCallback(Callback cb) {
 
 void Channel::setCloseCallback(Callback cb) {
     closeCallback_ = std::move(cb);
+}
+
+
+string Channel::eventsToString(int fd, int ev) {
+    ostringstream oss;
+    oss << fd << ": ";
+    if (ev & EPOLLIN) oss << "EPOLLIN ";
+    if (ev & EPOLLPRI) oss << "EPOLLPRI ";
+    if (ev & EPOLLOUT) oss << "EPOLLOUT ";
+    if (ev & EPOLLHUP) oss << "EPOLLHUP ";
+    if (ev & EPOLLRDHUP) oss << "EPOLLRDHUP ";
+    if (ev & EPOLLERR) oss << "EPOLLERR ";
+    return oss.str();
+}
+
+string Channel::eventsToString() const {
+    return eventsToString(fd_, events_);
+}
+
+string Channel::reventsToString() const {
+    return eventsToString(fd_, revents_);
 }

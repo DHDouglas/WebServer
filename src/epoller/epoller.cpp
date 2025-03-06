@@ -68,7 +68,6 @@ void Epoller::updateChannel(Channel* channel) {
               << " events = " << events
               << " state = " << static_cast<int>(state);
 
-
     if (state == State::NOT_EXIST) {
         assert(channels_.find(fd) == channels_.end()); 
         channels_[fd] = channel;

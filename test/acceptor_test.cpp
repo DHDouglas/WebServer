@@ -3,24 +3,25 @@
 
 #include "eventloop.h"
 #include "acceptor.h"
+#include "inet_address.h"
 
 using namespace std;
 
 
-void newConnection(int sockfd, struct sockaddr_in addr) {
+void newConnection(int sockfd, const InetAddress& addr) {
     cout << "newConnection(): accepted a new connection from " 
-         << ntohs(addr.sin_port) << endl; 
+         << addr.getPort() << endl; 
     const char* msg = "Hello World!\n";
     write(sockfd, msg, strlen(msg)); 
     close(sockfd); 
 }
 
-
 int main() {
     int port = 8889;
+    InetAddress addr(port); 
     EventLoop loop;
-    Acceptor acceptor(&loop, port); 
-    acceptor.setNewConnCallBack(newConnection);  
+    Acceptor acceptor(&loop, addr); 
+    acceptor.setNewConnCallback(newConnection);  
     acceptor.listen(); 
     loop.loop(); 
 }

@@ -8,7 +8,7 @@ set(SUB_SRC_DIRS
     eventloop
     logger
     timer
-    # http
+    tcp
 )
 
 set(SOURCES "")
@@ -20,7 +20,6 @@ foreach(D ${SUB_SRC_DIRS})
     list(APPEND SOURCES ${D_SOURCES})
     list(APPEND INCLUDE_DIRS ${DIR_PATH})
 endforeach()
-
 
 
 add_library(MyObjects ${SOURCES})
