@@ -34,10 +34,15 @@ target_link_libraries(logger_test PRIVATE MyObjects)
 add_executable(asynclogging_test asynclogging_test.cpp)
 target_link_libraries(asynclogging_test PRIVATE MyObjects)
 
-add_executable(inet_address_test inet_address_test.cpp)
-target_link_libraries(inet_address_test PRIVATE MyObjects)
-target_link_libraries(inet_address_test PRIVATE gtest gtest_main pthread)
-add_test(NAME inet_address_test COMMAND inet_address_test)
+add_executable(inet_address_unittest inet_address_unittest.cpp)
+target_link_libraries(inet_address_unittest PRIVATE MyObjects)
+target_link_libraries(inet_address_unittest PRIVATE gtest gtest_main pthread)
+add_test(NAME inet_address_unittest COMMAND inet_address_unittest)
 
 add_executable(tcpserver_test tcpserver_test.cpp)
 target_link_libraries(tcpserver_test PRIVATE MyObjects)
+
+add_executable(buffer_unittest buffer_unittest.cpp)
+target_link_libraries(buffer_unittest PRIVATE MyObjects)
+target_link_libraries(buffer_unittest PRIVATE gtest gtest_main pthread)
+

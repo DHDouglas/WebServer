@@ -1,6 +1,7 @@
 #include "tcp_connection.h"
 #include "eventloop.h"
 #include "logger.h"
+#include "timestamp.h"
 
 using namespace std;
 
@@ -19,7 +20,7 @@ TcpConnection::TcpConnection(EventLoop* loop,
     peer_addr_(peer_addr)
 {
     channel_.setReadCallback(
-        bind(&TcpConnection::handleRead, this));
+        bind(&TcpConnection::handleRead, this, placeholders::_1));
     channel_.setWriteCallback(
         bind(&TcpConnection::handleWrite, this));
     channel_.setCloseCallback(
@@ -45,16 +46,18 @@ TcpConnection::~TcpConnection() {
 }
 
 
-void TcpConnection::handleRead() {
+void TcpConnection::handleRead(Timestamp receive_time) {
     LOG_TRACE << "TcpConnection::handleRead() msgCallback_ invoked"; 
-    char buf[65536]; 
-    ssize_t n = read(channel_.getFd(), buf, sizeof buf); 
+    int save_errno = 0;
+    ssize_t n = input_buffer_.readFd(channel_.getFd(), &save_errno); 
     if (n > 0) {
-        msgCallback_(shared_from_this(), buf, n);
+        msgCallback_(shared_from_this(), &input_buffer_, receive_time);
         LOG_TRACE << "TcpConnection::handleRead() msgCallback_ invoked"; 
     } else if (n == 0) {  // EOF, 连接关闭
         handleClose();    
     } else {
+        errno = save_errno;
+        LOG_SYSERR << "TcpConnection::handleRead";
         handleError();   
     }
 }

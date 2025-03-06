@@ -7,16 +7,17 @@
 #include "channel.h"
 #include "timestamp.h"
 #include "inet_address.h"
+#include "buffer.h"
+
 
 class EventLoop; 
 
 class TcpConnection : public std::enable_shared_from_this<TcpConnection>{
 public:
-    using Buffer = char;
     using ConnectionCallback = std::function<void(const std::shared_ptr<TcpConnection>&)>;
     using CloseCallback = ConnectionCallback;
     using WriteCompleteCallback = ConnectionCallback;
-    using MessageCallback = std::function<void(const std::shared_ptr<TcpConnection>&, Buffer*, size_t n)>; 
+    using MessageCallback = std::function<void(const std::shared_ptr<TcpConnection>&, Buffer*, Timestamp t)>; 
     using TcpConnectionPtr = std::shared_ptr<TcpConnection>; 
 
 public:
@@ -64,7 +65,7 @@ private:
     enum class State { kConnecting, kConnected, kDisconnected, kDisconnecting }; 
     void setState(State s) { state_ = s; }
     const char* stateToString() const;
-    void handleRead();
+    void handleRead(Timestamp receive_time);
     void handleWrite();
     void handleClose();
     void handleError(); 
@@ -88,4 +89,6 @@ private:
     MessageCallback msgCallback_;
     WriteCompleteCallback writeCompleteCallback_; 
     CloseCallback closeCallback_;   // 用于通知TcpServer移除持有的指向该对象的TcpConnectionPtr, 非用户回调. 
+
+    Buffer input_buffer_; 
 };

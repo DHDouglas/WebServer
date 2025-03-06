@@ -15,6 +15,7 @@
 #include "timer.h"
 #include "thread.h"
 #include "logger.h"
+#include "timestamp.h"
 
 class Channel; 
 
@@ -65,6 +66,7 @@ private:
 
     std::unique_ptr<Epoller> epoller_; 
     std::unique_ptr<TimerManager> timer_manager_; 
+    Timestamp poll_return_time_; 
 
     ChannelList active_channels_;
     Channel* current_active_channel_; 

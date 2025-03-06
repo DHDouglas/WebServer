@@ -72,11 +72,11 @@ void EventLoop::loop() {
 
     while (!quit_) {
         active_channels_.clear(); 
-        epoller_->poll(kPollTimeMs, &active_channels_); 
+        poll_return_time_ = epoller_->poll(kPollTimeMs, &active_channels_); 
         event_handling_ = true;
         for (auto& channel : active_channels_) {
             current_active_channel_ = channel; 
-            current_active_channel_->handleEvents(); 
+            current_active_channel_->handleEvents(poll_return_time_); 
         }
         current_active_channel_ = nullptr; 
         event_handling_ = false; 

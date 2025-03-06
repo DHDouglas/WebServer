@@ -8,6 +8,8 @@
 #include <cstdlib>
 #include <sstream>
 
+#include "timestamp.h"
+
 class EventLoop;
 
 class Channel {
@@ -15,12 +17,13 @@ public:
     // 标记channel在Epoller中的注册状态: 未持有/已注册监听/已持有但监听
     enum class StateInEpoll { NOT_EXIST = 0, LISTENING, DETACHED };
     using Callback = std::function<void()>; 
+    using ReadCallback = std::function<void(Timestamp)>;
 
 public:
     Channel(EventLoop* loop, int fd);
     ~Channel(); 
     void setRevents(int evt); 
-    void handleEvents();
+    void handleEvents(Timestamp receive_time);
     int getFd() const; 
     int getEvents() const; 
     EventLoop* getOwnerLoop() const;
@@ -36,7 +39,7 @@ public:
     bool isReading() const; 
     bool isNoneEvent() const; 
 
-    void setReadCallback(Callback cb);
+    void setReadCallback(ReadCallback cb);
     void setWriteCallback(Callback cb); 
     void setErrorCallback(Callback cb); 
     void setCloseCallback(Callback cb); 
@@ -47,7 +50,7 @@ public:
 
 private:
     void updateInEpoller();    // add or mod
-    void handleEventWithGuard();
+    void handleEventWithGuard(Timestamp receive_time);
     // for debug
     static std::string eventsToString(int fd, int ev); 
     std::string reventsToString() const;
@@ -58,7 +61,7 @@ private:
     static const int kReadEvent = EPOLLIN | EPOLLPRI;
     static const int kWriteEvent = EPOLLOUT; 
 
-    Callback readCallback_; 
+    ReadCallback readCallback_; 
     Callback writeCallback_; 
     Callback errorCallback_; 
     Callback closeCallback_;  

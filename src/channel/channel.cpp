@@ -1,5 +1,6 @@
 #include "channel.h"
 #include "eventloop.h"
+#include "timestamp.h"
 #include <memory>
 
 
@@ -46,18 +47,18 @@ void Channel::tie(const std::shared_ptr<void>& obj) {
     tied_ = true;
 }
 
-void Channel::handleEvents() {
+void Channel::handleEvents(Timestamp receive_time) {
     std::shared_ptr<void> gurad;
     if (tied_) {
         // 若tie_对象仍存在, 则保证其在handleEvents执行期间存活, 不被销毁.
         gurad = tie_.lock();  
-        if (gurad) handleEventWithGuard(); 
+        if (gurad) handleEventWithGuard(receive_time); 
     } else {
-        handleEventWithGuard();
+        handleEventWithGuard(receive_time);
     }
 }
 
-void Channel::handleEventWithGuard() {
+void Channel::handleEventWithGuard(Timestamp receive_time) {
     event_handling = true; 
     LOG_TRACE << reventsToString(); 
     if (revents_ & EPOLLERR) {
@@ -69,7 +70,7 @@ void Channel::handleEventWithGuard() {
     }
 
     if (revents_ & (EPOLLIN | EPOLLPRI | EPOLLRDHUP)) { // 可读, 带外数据可读, 对端半关闭(可读EOF)
-        if (readCallback_) readCallback_(); 
+        if (readCallback_) readCallback_(receive_time); 
     }
 
     if (revents_ & EPOLLOUT) {  // 可写
@@ -134,7 +135,7 @@ Channel::StateInEpoll Channel::getState() {
     return state_;
 }
 
-void Channel::setReadCallback(Callback cb) {
+void Channel::setReadCallback(ReadCallback cb) {
     readCallback_ = std::move(cb); 
 }
 

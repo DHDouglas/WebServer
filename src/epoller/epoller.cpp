@@ -1,6 +1,7 @@
 #include "epoller.h"
 #include "channel.h"
 #include "eventloop.h"
+#include "timestamp.h"
 #include <sys/epoll.h>
 
 
@@ -23,8 +24,9 @@ int Epoller::getEpollFd() const {
     return epoll_fd_; 
 }
 
-void Epoller::poll(int timeout_ms, ChannelList* activeChannels) {
+Timestamp Epoller::poll(int timeout_ms, ChannelList* activeChannels) {
     int nfds = epoll_wait(epoll_fd_, events_.data(), static_cast<int>(events_.size()),  timeout_ms); 
+    Timestamp now(Timestamp::now());
     int savedErrno = errno; 
     if (nfds > 0) {
         fillActiveChannels(nfds, activeChannels); 
@@ -39,6 +41,7 @@ void Epoller::poll(int timeout_ms, ChannelList* activeChannels) {
             LOG_SYSERR << "EPoller::poll()"; 
         }
     }
+    return now; 
 }
 
 void Epoller::fillActiveChannels(int nfds, ChannelList* activeChannels) const {

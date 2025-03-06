@@ -9,6 +9,7 @@ set(SUB_SRC_DIRS
     logger
     timer
     tcp
+    buffer
 )
 
 set(SOURCES "")

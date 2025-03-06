@@ -9,9 +9,9 @@
 
 #include "channel.h"
 #include "logger.h"
+#include "timestamp.h"
 
 class EventLoop;
-
 
 class Epoller {
 public:
@@ -21,7 +21,7 @@ public:
 
     Epoller(EventLoop* loop);
     ~Epoller(); 
-    void poll(int timeoutMs, ChannelList* activeChannels); 
+    Timestamp poll(int timeoutMs, ChannelList* activeChannels); 
 
     bool hasChannel(Channel* channel); 
     int getEpollFd() const; 

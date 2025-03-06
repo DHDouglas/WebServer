@@ -2,6 +2,8 @@
 
 #include "logger.h"
 #include "tcp_server.h"
+#include "buffer.h"
+#include "timestamp.h"
 
 void onConnection(const TcpConnection::TcpConnectionPtr& conn) {
     if (conn->connected()) {
@@ -14,9 +16,12 @@ void onConnection(const TcpConnection::TcpConnectionPtr& conn) {
     }
 }
 
-void onMessage(const TcpConnection::TcpConnectionPtr& conn, const char* data, ssize_t len) {
-    printf("onMessage() : received %zd bytes from connection [%s], data: %s\n",
-         len, conn->getName().c_str(), data);
+void onMessage(const TcpConnection::TcpConnectionPtr& conn, Buffer* buf, Timestamp receive_time) {
+    printf("onMessage() : received %zd bytes from connection [%s], at: %s\n",
+         buf->readableBytes(), 
+         conn->getName().c_str(), 
+         receive_time.toFormattedString().c_str());
+    printf("onMessage():[%s]\n", buf->retrieveAllToString().c_str() ); 
 }
 
 

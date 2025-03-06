@@ -6,17 +6,19 @@
 
 #include "eventloop.h"
 #include "channel.h"
+#include "timestamp.h"
 
 EventLoop* g_loop;
 
-// 测试
+// 测试Epoller的epoll功能以及channel的事件分发功能. 
 
-void timeout() {
-    printf("Timeout\n");
+void timeout(Timestamp receive_time) {
+    printf("%s Timeout\n", receive_time.toFormattedString().c_str()); 
     g_loop->quit(); 
 }
 
 int main() {
+    printf("%s started\n", Timestamp::now().toFormattedString().c_str()); 
     EventLoop loop;
     g_loop = &loop; 
 

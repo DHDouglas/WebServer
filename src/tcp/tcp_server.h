@@ -18,12 +18,13 @@ class Acceptor;
 
 class TcpConnection;
 
+class Buffer;
+
 class TcpServer {
 public:
-    using Buffer = char; 
     using ThreadInitCallback = std::function<void(EventLoop*)>; 
     using ConnectionCallback = std::function<void(const std::shared_ptr<TcpConnection>&)>;
-    using MessageCallback = std::function<void(const std::shared_ptr<TcpConnection>&, Buffer*, size_t n)>; 
+    using MessageCallback = std::function<void(const std::shared_ptr<TcpConnection>&, Buffer*, Timestamp)>; 
     using WriteCompleteCallback = ConnectionCallback;
     using CloseCallback = ConnectionCallback;
     using TcpConnectionPtr = std::shared_ptr<TcpConnection>; 
