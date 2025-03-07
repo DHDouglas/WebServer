@@ -46,3 +46,11 @@ add_executable(buffer_unittest buffer_unittest.cpp)
 target_link_libraries(buffer_unittest PRIVATE MyObjects)
 target_link_libraries(buffer_unittest PRIVATE gtest gtest_main pthread)
 
+add_executable(tcpconn_send_test tcpconn_send_test.cpp)
+target_link_libraries(tcpconn_send_test PRIVATE MyObjects)
+
+add_executable(tcpconn_send2_test tcpconn_send2_test.cpp)
+target_link_libraries(tcpconn_send2_test PRIVATE MyObjects)
+
+add_executable(tcpconn_send3_test tcpconn_send3_test.cpp)
+target_link_libraries(tcpconn_send3_test PRIVATE MyObjects)

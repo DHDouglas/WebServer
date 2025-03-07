@@ -1,13 +1,27 @@
+#include <sys/eventfd.h>
+#include <signal.h>
+
 #include "eventloop.h"
 #include "channel.h"
 #include "timer.h"
-#include <sys/eventfd.h>
 
 using namespace std;
 
 thread_local EventLoop* EventLoop::t_loopInThisThread = nullptr; 
 
 static constexpr int kPollTimeMs = 10000;
+
+
+// 当向断开的conn_fd调用write写入时会收到SIGPIPE信号, 其默认行为是终止进程.
+// 因此对于服务器端程序通常需要忽略该信号. 通过一个全局变量来实现. 
+class IgnoreSigPipe {
+public:
+    IgnoreSigPipe() { ::signal(SIGPIPE, SIG_IGN);}
+};
+
+IgnoreSigPipe initObj;
+
+
 
 EventLoop::EventLoop() 
     : looping_(false), 

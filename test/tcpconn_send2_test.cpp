@@ -5,13 +5,19 @@
 #include "buffer.h"
 #include "timestamp.h"
 
-/* 测试TcpServer, 以及TcpConn的接收功能 */
+using namespace std;
+/* 测试TcpConnection的send() */
+string msg1(100, 'A');
+string msg2(200, 'B'); 
 
 void onConnection(const TcpConnection::TcpConnectionPtr& conn) {
     if (conn->connected()) {
         printf("onConnection(): new connection [%s] from %u\n", 
             conn->getName().c_str(), 
             conn->getPeerAddress().getPort());
+        conn->send(msg1); 
+        conn->send(msg2);
+        conn->shutdown();  
     } else {
         printf("onConnection(): connection [%s] is down\n",
             conn->getName().c_str());
@@ -23,7 +29,8 @@ void onMessage(const TcpConnection::TcpConnectionPtr& conn, Buffer* buf, Timesta
          buf->readableBytes(), 
          conn->getName().c_str(), 
          receive_time.toFormattedString().c_str());
-    printf("onMessage():[%s]\n", buf->retrieveAllToString().c_str() ); 
+    std::string msg = buf->retrieveAllToString();
+    printf("onMessage():[%s]\n", msg.c_str());
 }
 
 

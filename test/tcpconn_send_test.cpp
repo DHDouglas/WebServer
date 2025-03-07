@@ -5,7 +5,7 @@
 #include "buffer.h"
 #include "timestamp.h"
 
-/* 测试TcpServer, 以及TcpConn的接收功能 */
+/* 测试TcpConnection的send() */
 
 void onConnection(const TcpConnection::TcpConnectionPtr& conn) {
     if (conn->connected()) {
@@ -23,7 +23,10 @@ void onMessage(const TcpConnection::TcpConnectionPtr& conn, Buffer* buf, Timesta
          buf->readableBytes(), 
          conn->getName().c_str(), 
          receive_time.toFormattedString().c_str());
-    printf("onMessage():[%s]\n", buf->retrieveAllToString().c_str() ); 
+        
+    std::string msg = buf->retrieveAllToString();
+    printf("onMessage():[%s]\n", msg.c_str());
+    conn->send(msg); 
 }
 
 

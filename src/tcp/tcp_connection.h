@@ -3,6 +3,7 @@
 #include <memory>
 #include <cassert>
 #include <functional>
+#include <vector>
 
 #include "channel.h"
 #include "timestamp.h"
@@ -27,7 +28,6 @@ public:
                   const InetAddress& local_addr, 
                   const InetAddress& peer_addr);
     ~TcpConnection(); 
-    
 
     bool connected() const { return state_ == State::kConnected; }
     bool disconnected() const { return state_ == State::kDisconnected; }
@@ -36,7 +36,6 @@ public:
     std::string getName() const { return name_; }
     const InetAddress& getLocalAddress() const { return local_addr_; }
     const InetAddress& getPeerAddress() const { return peer_addr_; }
-
 
     void setConnectionCallback(const ConnectionCallback& cb) {
         connCallback_ = cb;
@@ -60,6 +59,12 @@ public:
     // called when TcpServer has removed the conn from its map. should be called only once
     void connectionDestroyed(); 
 
+    void send(const void* message, size_t len); 
+    void send(const std::string& message); 
+    void send(Buffer* message);   // swap the Buffer. 
+
+    void shutdown(); // 调用shutdownInLoop, 后者保证在EventLoop所属的IO线程调用
+
 
 private:
     enum class State { kConnecting, kConnected, kDisconnected, kDisconnecting }; 
@@ -70,9 +75,8 @@ private:
     void handleClose();
     void handleError(); 
 
-
-public:
-
+    void sendInLoop(const void* message, size_t len); 
+    void shutdownInLoop();  
 
 
 private:
@@ -91,4 +95,5 @@ private:
     CloseCallback closeCallback_;   // 用于通知TcpServer移除持有的指向该对象的TcpConnectionPtr, 非用户回调. 
 
     Buffer input_buffer_; 
+    Buffer output_buffer_; 
 };

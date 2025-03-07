@@ -71,6 +71,7 @@ void TcpServer::newConnection(int sockfd, const InetAddress& peer_addr) {
     conn->setCloseCallback(
         bind(&TcpServer::removeConnection, this, placeholders::_1));
     // 放到runInLoop, 保证移除TcpConnection的操作只能在其所属EventLoop所在线程中执行
+    // 注: bind内部拷贝得到的是weak_ptr, 而不是shared_ptr. gbd跟踪显示weak count为2.
     loop_->runInLoop(bind(&TcpConnection::connectionEstablished, conn)); 
 }
 
