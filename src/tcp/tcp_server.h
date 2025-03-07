@@ -11,7 +11,7 @@
 #include "eventloop.h"
 #include "timestamp.h"
 #include "acceptor.h"
-#include "eventloop_thread.h"
+#include "eventloop_threadpool.h"
 #include "tcp_connection.h"
 
 class Acceptor; 
@@ -36,9 +36,9 @@ public:
     // Thread safe. Starts the server if it's not listening. Harmless to call it multiple times. 
     void start();  
     // Not thread safe.
-    void setConnectionCallback(const ConnectionCallback& cb); 
+    void setConnectionCallback(const ConnectionCallback& cb) { connCallback_ = cb;  }
     // Not thread safe.
-    void setMessageCallback(const MessageCallback& cb); 
+    void setMessageCallback(const MessageCallback& cb) { msgCallback_ = cb; }
 
     // Not thread safe, but in loop.
     void newConnection(int sockfd, const InetAddress& addr);  
@@ -46,6 +46,23 @@ public:
     void removeConnection(const TcpConnectionPtr& conn); 
     // Not thread safe, but in loop.
     void removeConnectionInLoop(const TcpConnectionPtr& conn); 
+
+
+    /* Set the number of threads for handling input. 
+     *
+     * Always accepts new connection in loop's thread.
+     * Must be called before @c start
+     * @param numThreads 
+     * - 0 means all I/O in loop's thread, no thread will created. 
+     *   this is the default value. 
+     * - 1 means all I/O in another thread. 
+     * - N means a thread pool with N threads, new connections 
+     *   are assigned on a round-robin basis.
+     */
+    void setThreadNum(int num_threads);
+    void setThreadInitCallback(const ThreadInitCallback& cb) { threadInitCallback_ = cb; }
+    /// valid after calling start()
+    std::shared_ptr<EventLoopThreadPool> threadPool() { return eventloop_thread_pool_; }
 
 
 private:
@@ -58,8 +75,7 @@ private:
     const std::string name_;
 
     std::unique_ptr<Acceptor> acceptor_; 
-    std::unique_ptr<EventLoopThread> eventloop_thread; 
-    // std::shared_ptr<EventLoopThreadPool> eventloop_thread_pool_; 
+    std::shared_ptr<EventLoopThreadPool> eventloop_thread_pool_; 
 
     ConnectionCallback connCallback_;
     MessageCallback msgCallback_;

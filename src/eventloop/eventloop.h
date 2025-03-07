@@ -44,7 +44,8 @@ public:
     std::weak_ptr<Timer> runEvery(const Duration& interval, const TimerCallback& cb); 
     void removeTimer(const std::weak_ptr<Timer>& wk_ptr_timer);  
 
-    static thread_local EventLoop* t_loopInThisThread;  // 线程局部存储持续性, 保证每个线程只有一个EventLoop实例.
+    // 线程局部存储持续性, 保证每个线程只有一个EventLoop实例.
+    static thread_local EventLoop* t_loopInThisThread;  
     static EventLoop* getEventLoopInThisThread() { return t_loopInThisThread; }
 
 private:

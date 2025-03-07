@@ -1,5 +1,6 @@
 #include "tcp_server.h"
 #include "acceptor.h"
+#include "channel.h"
 #include "tcp_connection.h"
 #include <atomic>
 
@@ -10,6 +11,7 @@ TcpServer::TcpServer(EventLoop* loop, const InetAddress& addr, const string& nam
     ip_port_(addr.getIpString()),
     name_(name),
     acceptor_(make_unique<Acceptor>(loop_, addr)),
+    eventloop_thread_pool_(make_shared<EventLoopThreadPool>(loop_, name_)),
     started_(false), 
     next_conn_id_(1)
 {
@@ -33,20 +35,11 @@ TcpServer::~TcpServer() {
 
 void TcpServer::start() {
     if (!started_.exchange(true, std::memory_order_acq_rel)) {
+        eventloop_thread_pool_->start(threadInitCallback_); 
         assert(!acceptor_->isListening());  
         loop_->runInLoop(bind(&Acceptor::listen, acceptor_.get()));
     }
 }
-
-
-void TcpServer::setConnectionCallback(const ConnectionCallback& cb) {
-    connCallback_ = cb; 
-}
-
-void TcpServer::setMessageCallback(const MessageCallback& cb) {
-    msgCallback_ = cb;
-}
-
 
 
 // 为conn_fd绑定一个TcpConnection对象. 
@@ -61,7 +54,9 @@ void TcpServer::newConnection(int sockfd, const InetAddress& peer_addr) {
 
     InetAddress local_addr(InetAddress::getLocalAddrBySockfd(sockfd)); 
     // FIXME poll with zero timeout to double confirm the new connection
-    auto conn = make_shared<TcpConnection>(loop_, conn_name, sockfd, local_addr, peer_addr); 
+
+    EventLoop* io_loop = eventloop_thread_pool_->getNextLoop(); 
+    auto conn = make_shared<TcpConnection>(io_loop, conn_name, sockfd, local_addr, peer_addr); 
     connections_[conn_name] = conn; 
 
     // conn的回调
@@ -72,7 +67,7 @@ void TcpServer::newConnection(int sockfd, const InetAddress& peer_addr) {
         bind(&TcpServer::removeConnection, this, placeholders::_1));
     // 放到runInLoop, 保证移除TcpConnection的操作只能在其所属EventLoop所在线程中执行
     // 注: bind内部拷贝得到的是weak_ptr, 而不是shared_ptr. gbd跟踪显示weak count为2.
-    loop_->runInLoop(bind(&TcpConnection::connectionEstablished, conn)); 
+    io_loop->runInLoop(bind(&TcpConnection::connectionEstablished, conn)); 
 }
 
 
@@ -90,9 +85,16 @@ void TcpServer::removeConnectionInLoop(const TcpConnectionPtr& conn) {
 
     size_t n = connections_.erase(conn_name);
     assert(n == 1); 
+    // 获取conn所属EventLoop, 放到该loop所在IO线程执行
     EventLoop* ioLoop = conn->getOwnerLoop();
     // 必须加到EventLoop的任务队列中作为PendingFunctor执行, 
     // 而不能作为channel_.handleEvent()中的一步被直接调用. 
     // 防止channel_.handleEvent() => 析构该channel本身.
     ioLoop->addToQueueInLoop(bind(&TcpConnection::connectionDestroyed, conn));
+}
+
+
+void TcpServer::setThreadNum(int num_threads) {
+    assert(num_threads >= 0);
+    eventloop_thread_pool_->setThreadNum(num_threads);
 }

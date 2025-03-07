@@ -22,7 +22,6 @@ public:
 IgnoreSigPipe initObj;
 
 
-
 EventLoop::EventLoop() 
     : looping_(false), 
     quit_(false),
@@ -42,6 +41,7 @@ EventLoop::EventLoop()
     wakeup_channel_.setReadCallback(bind(&EventLoop::handleWakeUp, this));
     wakeup_channel_.enableReading(); 
 }
+
 
 EventLoop::~EventLoop() {
     LOG_DEBUG << "EventLoop " << this << " of thread " << threadId_ 
