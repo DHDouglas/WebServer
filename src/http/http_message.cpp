@@ -1,5 +1,7 @@
 #include "http_message.h"
 
+using namespace std;
+
 bool HttpMessage::set_version(const string str) {
     if (str == "HTTP/1.1" || str == "HTTP/1.0" || str == "HTTP/0") {
         version = std::move(str);  

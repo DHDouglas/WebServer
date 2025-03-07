@@ -1,19 +1,23 @@
-#include <iostream> 
 #include <gtest/gtest.h> 
 
-#include "../http_parser.h"
-#include "../http_message.h"
+#include "http_parser.h"
+#include "http_message.h"
 
 using namespace std; 
 
-/* 1. 实现一个测试夹具, 提供一个测试函数, 接受指定文本调用parse进行解析, 解析后根据解析结果构造一个Request对象, 
- * 该对象提供一个inspect()或encode()函数, 能够编码生产请求报文(包含\r\n等).
+/* 测试思路
  * 
- * 2. 每个测试函数中, 手动构造一个Request对象, 调用add_method()等方法, 手动进行比较. 
+ * 1) 实现一个测试夹具, 持有HttpParser, 提供测试函数:
+ *    对指定地址的数据调用parser.parse()进行解析, 完成后根据解析结果构造一个Request对象.
+ *    该对象提供一个encode()函数, 以string类型返回请求报文(包含\r\n等).
+ * 
+ * 2) 每个测试中, 手动构造一个Request对象作为答案, 调用add_method()等方法添加报文信息. 
+ *    比较解析返回的Request对象与答案对象, 二者encode()返回的字符串内容是否一致.
  */ 
 
 
-/*
+/* 测试项:
+ * 
  * 1) 对"完整报文"的解析功能是否正常. 
  *   - 正确的HTTP报文: 无请求体、有请求体, 以及消息切割是否正确. 
  *   - 错误的HTTP报文: 
@@ -136,7 +140,7 @@ TEST_F(RequestFixture, TestPartion) {
 
     using Result = HttpParser::ParseResult;
     Result ret; 
-    for (int pos = 0; pos < len; ) {
+    for (size_t pos = 0; pos < len; ) {
         buf_size += delta; 
         consumed = buf_size;
         ret = parser.parse(text + pos, consumed); 

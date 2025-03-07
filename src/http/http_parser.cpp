@@ -64,6 +64,8 @@ HttpParser::ParseResult HttpParser::parse(const char* data, size_t& len) {
                     parse_phase = ParsePhase::DONE; 
                 }
             } break; 
+
+            case ParsePhase::DONE: break;
         }
     }
 
@@ -146,6 +148,11 @@ HttpParser::ParseResult HttpParser::parse_request_line() {
             parse_rl_state = State::BEFORE_URI; break;
         case State::VERSION:
             parse_rl_state = State::BEFORE_VERSION; break;
+
+        case State::BEFORE_METHOD:
+        case State::BEFORE_URI:
+        case State::BEFORE_VERSION: 
+        case State::LF: abort(); 
     }
     return ParseResult::AGAIN; 
 }

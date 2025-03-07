@@ -45,6 +45,8 @@ target_link_libraries(tcpserver_test PRIVATE MyObjects)
 add_executable(buffer_unittest buffer_unittest.cpp)
 target_link_libraries(buffer_unittest PRIVATE MyObjects)
 target_link_libraries(buffer_unittest PRIVATE gtest gtest_main pthread)
+add_test(NAME buffer_unittest COMMAND buffer_unittest)
+
 
 add_executable(tcpconn_send_test tcpconn_send_test.cpp)
 target_link_libraries(tcpconn_send_test PRIVATE MyObjects)
@@ -54,3 +56,10 @@ target_link_libraries(tcpconn_send2_test PRIVATE MyObjects)
 
 add_executable(tcpconn_send3_test tcpconn_send3_test.cpp)
 target_link_libraries(tcpconn_send3_test PRIVATE MyObjects)
+
+add_executable(http_parser_unittest http_parser_unittest.cpp)
+target_link_libraries(http_parser_unittest PRIVATE MyObjects)
+target_link_libraries(http_parser_unittest PRIVATE gtest gtest_main pthread)
+add_test(NAME http_parser_unittest COMMAND http_parser_unittest)
+
+

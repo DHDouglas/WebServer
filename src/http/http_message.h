@@ -6,7 +6,6 @@
 #include <sys/uio.h>
 #include <cstring>
 
-using namespace std;
 
 enum class HttpMethod {
     GET = 0,
@@ -41,7 +40,7 @@ class HttpMessage {
 public:
     bool set_version(const std::string str); 
     bool add_header(const std::string name, const std::string value);
-    bool set_header(const string name, const string value);
+    bool set_header(const std::string name, const std::string value);
     bool set_headers(std::vector<std::pair<std::string, std::string>> headers); 
     bool set_body(const void* data, size_t len); 
     const void* get_body();
@@ -60,7 +59,7 @@ protected:
     
     std::string version;
     std::vector<std::pair<std::string, std::string>> headers; 
-    const void* body;    // 如何判断body是来自mmap, 还是一片动态内存? 
+    const void* body;    // ? 如何判断body是来自mmap, 还是一片动态内存? 
     size_t body_size; 
 };
 
@@ -69,7 +68,7 @@ class HttpRequest: public HttpMessage {
 public:
     HttpRequest() = default;
     ~HttpRequest() = default;
-    bool set_method(const string str);
+    bool set_method(const std::string str);
     bool set_method(HttpMethod method);
     bool set_uri(const std::string str); 
     int encode(struct iovec vectors[], int max);

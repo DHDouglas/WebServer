@@ -30,7 +30,6 @@ public:
 
     bool parsing_completion(); 
 
-
 private:
     enum class ParsePhase {
         REQUEST_LINE = 0,
@@ -60,7 +59,6 @@ private:
         END_LF, 
     }; 
 
-
 private:
     void reset(); 
     ParseResult parse_request_line(); 
@@ -71,6 +69,7 @@ private:
     bool check_version(const char* str, size_t len);
     bool check_header(const char* name, size_t n_len, const char* value, size_t v_len); 
 
+private:
     ParsePhase parse_phase; 
     ParseRequestLineState parse_rl_state;
     ParseHeaderState parse_hd_state;  

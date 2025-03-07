@@ -10,6 +10,7 @@ set(SUB_SRC_DIRS
     timer
     tcp
     buffer
+    http
 )
 
 set(SOURCES "")
