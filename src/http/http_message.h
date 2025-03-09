@@ -40,15 +40,15 @@ std::string getHttpStatusCodeString(HttpStatusCode code);
 
 class HttpMessage {
 public:
-    HttpMessage(): body(nullptr), body_size(0) {};
+    HttpMessage(): body_(nullptr), body_size_(0) {};
     virtual ~HttpMessage() = default; 
     bool setVersion(const std::string str); 
     bool addHeader(const std::string name, const std::string value);
     bool setHeader(const std::string name, const std::string value);
     bool setHeaders(std::vector<std::pair<std::string, std::string>> headers); 
     bool setBody(const void* data, size_t len); 
-    const void* getBody() const { return body; }
-    size_t getBodySize() const { return body_size; }
+    const void* getBody() const { return body_; }
+    size_t getBodySize() const { return body_size_; }
 
     int encode(struct iovec vectors[], int max) const;
     std::string encode() const; 
@@ -65,12 +65,12 @@ protected:
     struct field {
         const char* base;
         size_t len; 
-    } mutable startline[3]; 
+    } mutable startline_[3]; 
     
-    std::string version;
-    std::vector<std::pair<std::string, std::string>> headers; 
-    const void* body;    
-    size_t body_size; 
+    std::string version_;
+    std::vector<std::pair<std::string, std::string>> headers_; 
+    const void* body_;    
+    size_t body_size_; 
 };
 
 
@@ -85,8 +85,8 @@ public:
 private:
     void fillStartLine() const override; 
 private:
-    std::string method;
-    std::string uri;
+    std::string method_;
+    std::string uri_;
 };
 
 
@@ -94,12 +94,15 @@ class HttpResponse: public HttpMessage {
 public:
     HttpResponse() = default;
     ~HttpResponse() = default; 
-    bool setStatus(HttpStatusCode status);  // 根据状态码, 自动设定值, 短语; 
+    bool setStatus(HttpStatusCode code);  // 根据状态码, 自动设定值, 短语; 
+    HttpStatusCode getCode() const  { return code_; }
+    std::string getCodeAsString() const { return code_str_; }
 
 private:
     void fillStartLine() const override; 
 
 private:
-    std::string code;
-    std::string phase;
+    HttpStatusCode code_;
+    std::string code_str_;
+    std::string phase_;
 };

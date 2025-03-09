@@ -14,6 +14,7 @@
 class AsyncLogger {
 
 public:
+    // 日志文件名, 单份日志上限(满后切换新文件), 从buffer定期刷入日志文件的间隔秒数. 
     AsyncLogger(const std::string& basename, off_t roll_size, int flush_interval = 2); 
     ~AsyncLogger();
     void append(const char* logline, int len); 

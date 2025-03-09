@@ -8,7 +8,7 @@ using namespace std;
 
 TcpServer::TcpServer(EventLoop* loop, const InetAddress& addr, const string& name)
     : loop_(loop),
-    ip_port_(addr.getIpString()),
+    ip_port_(addr.getIpPortString()),
     name_(name),
     acceptor_(make_unique<Acceptor>(loop_, addr)),
     eventloop_thread_pool_(make_shared<EventLoopThreadPool>(loop_, name_)),

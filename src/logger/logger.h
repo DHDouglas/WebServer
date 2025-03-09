@@ -56,8 +56,10 @@ public:
     static LogLevel getLogLevel(); 
     static void setLogLevel(LogLevel level); 
 
-    using OutputFunc = void(*)(const char* msg, int len);
-    using FlushFunc = void(*)(); 
+    // using OutputFunc = void(*)(const char* msg, int len);
+    // using FlushFunc = void(*)(); 
+    using OutputFunc = std::function<void(const char*, int)>;
+    using FlushFunc = std::function<void()>;
 
     static void setOutput(OutputFunc);  // Logger输出回调, 指定具体输出操作, 写到哪.
     static void setFlush(FlushFunc); 

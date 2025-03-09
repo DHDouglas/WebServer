@@ -1,4 +1,6 @@
 #include "http_message.h"
+#include "logger.h"
+
 
 using namespace std;
 
@@ -13,7 +15,7 @@ string getHttpStatusCodeString(HttpStatusCode code) {
 
 bool HttpMessage::setVersion(const string str) {
     if (str == "HTTP/1.1" || str == "HTTP/1.0" || str == "HTTP/0") {
-        version = std::move(str);  
+        version_ = std::move(str);  
         return true;
     }
     return false; 
@@ -22,13 +24,13 @@ bool HttpMessage::setVersion(const string str) {
 
 bool HttpMessage::addHeader(const string name, const string value) {
     if (name.length() == 0 || value.length() == 0) return false; 
-    headers.emplace_back(std::move(name), std::move(value)); 
+    headers_.emplace_back(std::move(name), std::move(value)); 
     return true;
 }
 
 
 bool HttpMessage::setHeader(const string name, const string value) {
-    for (auto& h : headers) {
+    for (auto& h : headers_) {
         if (h.first.length() == name.length() && strcasecmp(h.first.c_str(), name.c_str()) == 0) {
             h.second = std::move(value); 
             return true; 
@@ -39,15 +41,15 @@ bool HttpMessage::setHeader(const string name, const string value) {
 
 
 bool HttpMessage::setHeaders(vector<pair<string, string>> headers) {
-    this->headers = std::move(headers); 
+    this->headers_ = std::move(headers); 
     return true;
 }
 
 
 bool HttpMessage::setBody(const void* data, size_t len) {
     if (len > 0 && data != nullptr) {
-        body = data; 
-        body_size = len; 
+        body_ = data; 
+        body_size_ = len; 
         // TODO: if chunked
         return true;
     }
@@ -57,21 +59,21 @@ bool HttpMessage::setBody(const void* data, size_t len) {
 int HttpMessage::encode(struct iovec vectors[], int max) const{
     fillStartLine();
     assert(max >= 6); 
-    vectors[0].iov_base = (void*)startline[0].base;  // static_cast<void*>(const_cast<char*>(version.c_str())); 
-    vectors[0].iov_len = startline[0].len; 
+    vectors[0].iov_base = (void*)startline_[0].base;  // static_cast<void*>(const_cast<char*>(version.c_str())); 
+    vectors[0].iov_len = startline_[0].len; 
     vectors[1].iov_base = (void*)" ";  // static_cast<void*>(const_cast<char*>(" ")); 
     vectors[1].iov_len = 1; 
-    vectors[2].iov_base = (void*)startline[1].base; 
-    vectors[2].iov_len = startline[1].len; 
+    vectors[2].iov_base = (void*)startline_[1].base; 
+    vectors[2].iov_len = startline_[1].len; 
     vectors[3].iov_base = (void*)" ";
     vectors[3].iov_len = 1;
-    vectors[4].iov_base = (void*)startline[2].base;
-    vectors[4].iov_len = startline[2].len;   
+    vectors[4].iov_base = (void*)startline_[2].base;
+    vectors[4].iov_len = startline_[2].len;   
     vectors[5].iov_base = (void*)"\r\n"; 
     vectors[5].iov_len = 2; 
 
     int i = 6; 
-    for (auto& t : headers) {
+    for (auto& t : headers_) {
         if (i + 4 > max) {
             errno = EOVERFLOW;  
             return false; 
@@ -98,57 +100,56 @@ int HttpMessage::encode(struct iovec vectors[], int max) const{
     vectors[i].iov_len = 2; 
     ++i;
 
-    if (body && body_size > 0) {
+    if (body_ && body_size_ > 0) {
         if (i == max) {
             errno = EOVERFLOW;
             return false; 
         }
-        vectors[i].iov_base = (void*)body; 
-        vectors[i].iov_len = body_size;   
+        vectors[i].iov_base = (void*)body_; 
+        vectors[i].iov_len = body_size_;   
     }
     return i + 1; 
 }
 
-#include "logger.h"
 void HttpMessage::encode(Buffer* buf) const {
     fillStartLine();  
-    buf->append(startline[0].base, startline[0].len); 
+    buf->append(startline_[0].base, startline_[0].len); 
     buf->append(" ");
-    buf->append(startline[1].base, startline[1].len);
+    buf->append(startline_[1].base, startline_[1].len);
     buf->append(" ");
-    buf->append(startline[2].base, startline[2].len);
+    buf->append(startline_[2].base, startline_[2].len);
     buf->append("\r\n"); 
-    for (auto& t : headers) {
+    for (auto& t : headers_) {
         buf->append(t.first.data(), t.first.length()); 
         buf->append(": ");
         buf->append(t.second.data(), t.second.length());
         buf->append("\r\n"); 
     }
     buf->append("\r\n");
-    if (body && body_size > 0) {
+    if (body_ && body_size_ > 0) {
         LOG_TRACE << " HttpMessage::encode buf->append(body, body_size), body: " 
-                  << body << "body_size: " << body_size; 
-        buf->append(body, body_size);
+                  << body_ << "body_size: " << body_size_; 
+        buf->append(body_, body_size_);
     }
 }
 
 
 string HttpMessage::encode() const {
     fillStartLine(); 
-    string ret = string(startline[0].base, startline[0].len);
+    string ret = string(startline_[0].base, startline_[0].len);
     ret += " ";
-    ret += string(startline[1].base, startline[1].len);
+    ret += string(startline_[1].base, startline_[1].len);
     ret += " ";
-    ret += string(startline[2].base, startline[2].len);
+    ret += string(startline_[2].base, startline_[2].len);
     ret += "\r\n";
-    for (auto& t: headers) {
+    for (auto& t: headers_) {
         ret += t.first;
         ret += ": ";
         ret += t.second;
         ret += "\r\n";
     }
     ret += "\r\n";
-    ret += string((char*)body, body_size); 
+    ret += string((char*)body_, body_size_); 
     return ret;
 }
 
@@ -157,13 +158,13 @@ string HttpMessage::encode() const {
 bool HttpRequest::setMethod(HttpMethod method) {
     switch(method) {
         case HttpMethod::GET: 
-            this->method = "GET"; break;
+            this->method_ = "GET"; break;
 
         case HttpMethod::HEAD: 
-            this->method = "HEAD"; break; 
+            this->method_ = "HEAD"; break; 
         
         case HttpMethod::POST: 
-            this->method = "POST"; break;
+            this->method_ = "POST"; break;
         
         default: 
             return false; 
@@ -173,30 +174,30 @@ bool HttpRequest::setMethod(HttpMethod method) {
 
 bool HttpRequest::setMethod(const string str) {
     if (str == "GET" || str == "HEAD" || str == "POST") {
-        this->method = str;
+        this->method_ = str;
         return true; 
     }
     return false; 
 }
 
 bool HttpRequest::setUri(const string str) {
-    this->uri = std::move(str);
+    this->uri_ = std::move(str);
     return true;
 }
 
 void HttpRequest::fillStartLine() const {
-    startline[0].base = method.data(); 
-    startline[0].len = method.length();
-    startline[1].base = uri.data();
-    startline[1].len = uri.length();
-    startline[2].base = version.data();
-    startline[2].len = version.length(); 
-    assert(startline[0].base);
-    assert(startline[0].len > 0);
-    assert(startline[1].base);
-    assert(startline[1].len > 0); 
-    assert(startline[2].base);
-    assert(startline[2].len > 0); 
+    startline_[0].base = method_.data(); 
+    startline_[0].len = method_.length();
+    startline_[1].base = uri_.data();
+    startline_[1].len = uri_.length();
+    startline_[2].base = version_.data();
+    startline_[2].len = version_.length(); 
+    assert(startline_[0].base);
+    assert(startline_[0].len > 0);
+    assert(startline_[1].base);
+    assert(startline_[1].len > 0); 
+    assert(startline_[2].base);
+    assert(startline_[2].len > 0); 
 }
 
 // ----------------------------------------HttpRequest end
@@ -208,27 +209,28 @@ void HttpRequest::fillStartLine() const {
 
 bool HttpResponse::setStatus(HttpStatusCode code) {
     auto p = STATUS_CODE_PHASE.find(code);
+    code_ = code;
     if (p != STATUS_CODE_PHASE.end()) {
-        this->code = p->second.first;
-        this->phase = p->second.second; 
+        this->code_str_ = p->second.first;
+        this->phase_ = p->second.second; 
         return true; 
     }
     return false; 
 }
 
 void HttpResponse::fillStartLine() const {
-    startline[0].base = version.data(); 
-    startline[0].len = version.length();
-    startline[1].base = code.data();
-    startline[1].len = code.length();
-    startline[2].base = phase.data();
-    startline[2].len = phase.length(); 
-    assert(startline[0].base);
-    assert(startline[0].len > 0);
-    assert(startline[1].base);
-    assert(startline[1].len > 0); 
-    assert(startline[2].base);
-    assert(startline[2].len > 0); 
+    startline_[0].base = version_.data(); 
+    startline_[0].len = version_.length();
+    startline_[1].base = code_str_.data();
+    startline_[1].len = code_str_.length();
+    startline_[2].base = phase_.data();
+    startline_[2].len = phase_.length(); 
+    assert(startline_[0].base);
+    assert(startline_[0].len > 0);
+    assert(startline_[1].base);
+    assert(startline_[1].len > 0); 
+    assert(startline_[2].base);
+    assert(startline_[2].len > 0); 
 }
 
 // ----------------------------------------HttpResponse end
