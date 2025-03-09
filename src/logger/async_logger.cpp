@@ -1,15 +1,23 @@
-#include "async_logger.h"
-#include "timestamp.h"
 #include <cassert>
 #include <memory>
-#include <mutex>
+#include <cassert>
+
+#include "async_logger.h"
+#include "log_file.h"
+#include "timestamp.h"
+
+
 
 using namespace std;
 
-AsyncLogger::AsyncLogger(const string& log_fname, off_t roll_size, int flush_interval)
+AsyncLogger::AsyncLogger(const string& log_fname, 
+                         const string& dir, 
+                         off_t roll_size, 
+                         int flush_interval)
     : flush_interval_(flush_interval),
     running_(false), 
     basename_(log_fname), 
+    dir_(dir),
     roll_size_(roll_size),
     latch_(1), 
     current_buffer_(make_unique<Buffer>()),
@@ -66,7 +74,7 @@ void AsyncLogger::threadFunc() {
     assert(running_ == true); 
     latch_.countDown(); 
 
-    LogFile output(basename_, roll_size_, false);  // Logger后端只单线程写一个文件, 无需线程安全.
+    LogFile output(basename_, dir_, roll_size_, false);  // Logger后端只单线程写一个文件, 无需线程安全.
     BufferPtr new_buffer_1 = make_unique<Buffer>(); 
     BufferPtr new_buffer_2 = make_unique<Buffer>();
     new_buffer_1->bzero();

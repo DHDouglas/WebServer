@@ -1,9 +1,17 @@
+#include <sys/stat.h>
+#include <vector>
+#include <sstream>
+#include <cassert>
+#include <cstdio>
+#include <unistd.h>
+
 #include "log_file.h"
+#include "logger.h"
 
 using namespace std;
 
-AppendFile::AppendFile(string filename)
-    : fp_(::fopen(filename.c_str(), "ae")),   // 'e' for O_CLOEXEC
+AppendFile::AppendFile(const string& filename)
+    : fp_(::fopen(filename.c_str(), "ae")),     // 'e' for O_CLOEXEC
     written_bytes_(0)
 {
     assert(fp_); 
@@ -48,11 +56,13 @@ off_t AppendFile::writtenBytes() const {
 
 
 LogFile::LogFile(const std::string& basename, 
+                 const std::string& dir,
                  off_t roll_size, 
                  bool thread_safe, 
                  int fluash_interval, 
                  int check_every_n)
     : basename_(basename),
+    dir_(dir),
     roll_size_(roll_size),
     flush_interval_(fluash_interval),
     check_every_n_(check_every_n),
@@ -63,10 +73,42 @@ LogFile::LogFile(const std::string& basename,
     last_flush_(0)
 {
     assert(basename.find('/') == string::npos);  
+    ensureDirExists(dir); 
     rollFile();  
 }
 
 LogFile::~LogFile() = default; 
+
+
+void LogFile::ensureDirExists(string path) {
+    struct stat info;
+    if (stat(path.c_str(), &info) == 0 && (info.st_mode & S_IFDIR)) {
+        return; 
+    }
+
+    if (path.size() > 1 && path.back() == '/') {
+        path.pop_back();
+    }
+    vector<string> dirs;
+    stringstream ss(path); 
+    string cur_path, seg;
+    while (getline(ss, seg, '/')) {
+        dirs.push_back(seg); 
+    }
+
+    for (const auto& d : dirs) {
+        cur_path += d;
+        cur_path += '/';
+        if (stat(cur_path.c_str(), &info) != 0) { // 目录不存在
+            LOG_TRACE << "LogFile::ensureDirExists mkdir: " << cur_path; 
+            if (mkdir(cur_path.c_str(), 0755) != 0) {
+                LOG_SYSFATAL << "LogFile::ensureDirExists mkdir failed" << cur_path;
+            }
+        } else if (!(info.st_mode & S_IFDIR)) {
+            LOG_SYSFATAL << "Path exists but is not a directory: " << cur_path;
+        }
+    }
+}
 
 
 void LogFile::append(const char* logline, int len) {
@@ -111,7 +153,7 @@ void LogFile::appendUnlocked(const char* logline, int len) {
 
 bool LogFile::rollFile() {
     time_t now = 0;
-    string fname = getLogFileName(basename_, &now);  // 取日志文件base名+当前时间
+    string fname = dir_ + "/" + getLogFileName(basename_, &now);  // 取日志文件base名+当前时间
     time_t start = now / kRollIntervalSeconds_ * kRollIntervalSeconds_;  // 取整比较
     if (now > last_roll_) {
         last_roll_ = now;

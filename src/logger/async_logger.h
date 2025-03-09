@@ -1,21 +1,19 @@
+#include <atomic>
 #include <condition_variable>
-#include <sys/types.h>
 #include <vector>
 #include <memory>
-#include <cassert>
 #include <thread>
-#include <atomic>
+#include <mutex>
 
-#include "timestamp.h"
 #include "log_stream.h"
-#include "log_file.h"
+#include "timestamp.h"
 #include "count_down_latch.h"
 
 class AsyncLogger {
 
 public:
     // 日志文件名, 单份日志上限(满后切换新文件), 从buffer定期刷入日志文件的间隔秒数. 
-    AsyncLogger(const std::string& basename, off_t roll_size, int flush_interval = 2); 
+    AsyncLogger(const std::string& basename, const std::string& dir, off_t roll_size, int flush_interval = 2); 
     ~AsyncLogger();
     void append(const char* logline, int len); 
     void start();
@@ -30,6 +28,7 @@ private:
     const int flush_interval_; 
     std::atomic<bool> running_;
     std::string basename_; 
+    std::string dir_; 
     const off_t roll_size_;   
     std::unique_ptr<std::thread> thread_; 
     CountDownLatch latch_;   // 用于阻塞start()直至工作线程启动

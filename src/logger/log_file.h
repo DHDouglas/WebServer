@@ -1,19 +1,14 @@
 #pragma once
 
-#include <cstddef>
 #include <string>
-#include <unistd.h>
 #include <memory>
 #include <mutex>
-#include <cassert>
-#include <cstdio>
 #include <ctime>
-#include <sys/types.h>
 
 // 封装对文件的append写入操作
 class AppendFile {
 public:
-    explicit AppendFile(std::string filename);
+    explicit AppendFile(const std::string& filename);
     ~AppendFile(); 
     void append(const char* logline, size_t len);  // 追加到文件
     void flush();  
@@ -33,6 +28,7 @@ private:
 class LogFile {
 public:
     LogFile(const std::string& basename, 
+            const std::string& dir,
             off_t roll_size, 
             bool thread_safe = true, 
             int fluash_interval = 3, 
@@ -42,16 +38,18 @@ public:
     void append(const char* logline, int len); 
     void flush();
     bool rollFile();   // 创建新一份日志文件
+    static void ensureDirExists(std::string path); 
 
 private:
     void appendUnlocked(const char* logline, int len); 
     static std::string getLogFileName(const std::string& basename, time_t* now);  
 
 private:
-    const std::string basename_;
+    const std::string basename_;  // 日志文件名
+    const std::string dir_;       // 日志生成目录
     const off_t roll_size_;
     const int flush_interval_;   
-    const int check_every_n_;   // n次写入后检查时间, 是否需换新日志, or是否刷入磁盘.
+    const int check_every_n_;    // n次写入后检查时间, 是否需换新日志, or是否刷入磁盘.
 
     int count_;
 

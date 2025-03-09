@@ -21,7 +21,7 @@ int main(int, char* argv[])
 {
   char name[256] = { '\0' };
   strncpy(name, argv[0], sizeof name - 1);
-  g_logFile = make_unique<LogFile>(::basename(name), 200*1000);  // 每200KB换一份日志
+  g_logFile = make_unique<LogFile>(::basename(name), "log", 200*1000);  // 每200KB换一份日志
   Logger::setOutput(outputFunc);
   Logger::setFlush(flushFunc);
 

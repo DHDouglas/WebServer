@@ -2,4 +2,6 @@ depre
 tmp/
 build/
 out/
+bin/
+log/
 .cache

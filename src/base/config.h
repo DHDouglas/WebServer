@@ -1,8 +1,9 @@
 #pragma once
 
-#include "inet_address.h"
 #include <string>
 #include <logger.h>
+
+#include "inet_address.h"
 
 class Config {
 public:
@@ -15,7 +16,7 @@ private:
     void printHelp(const char* program) const; 
 
     void setLogLevel(const char* loglevel);
-    void ensureAbsoluteRootPath();
+    std::string ensureAbsoluteRootPath(std::string path);
     
 public:
     // ip地址
@@ -30,6 +31,8 @@ public:
     double timeout_seconds_ = 30;
     // 日志文件名
     std::string log_file_name_ = "HttpServerLog";
+    // 日志生成目录
+    std::string log_dir_ = "./log"; 
     // 日志级别
     Logger::LogLevel log_level_ = Logger::INFO;
     // 单份日志文件上限(满后切换新文件)

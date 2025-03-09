@@ -27,11 +27,11 @@ endforeach()
 add_library(MyObjects ${SOURCES})
 target_include_directories(MyObjects PUBLIC ${INCLUDE_DIRS})
 
-add_executable(HTTPServer ${SOURCES})
-target_link_libraries(HTTPServer PRIVATE MyObjects)
-# add_executable(HTTPServer ${SOURCES})
-# target_include_directories(HTTPServer PRIVATE ${INCLUDE_DIRS})
-
+add_executable(http_server main.cpp)
+target_link_libraries(http_server PRIVATE MyObjects)
+# set_target_properties(http_server PROPERTIES
+#     RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin
+# )
 
 # 为所有头文件在src/include/目录下创建符号链接. 
 set(LINK_DIR "${SRC_DIR}/include")

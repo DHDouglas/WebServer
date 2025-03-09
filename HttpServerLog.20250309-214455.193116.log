@@ -1,0 +1,13 @@
+20250309 21:44:55.226348  193116 INFO  HttpServer starts listening on 0.0.0.0:8080 - http_server.cpp:43
+20250309 21:45:17.114659  193116 INFO  TcpServer::newConnection [HttpServer] - new connection [HttpServer#1] from 192.168.88.1:56143 - tcp_server.cpp:51
+20250309 21:45:17.114885  193118 INFO  GET /test.txt HTTP/1.1
+Content-Type: application/json
+User-Agent: PostmanRuntime/7.43.0
+Accept: */*
+Postman-Token: 32f10100-6110-4cb3-969a-99bc67ca9321
+Host: 192.168.88.131:8080
+Accept-Encoding: gzip, deflate, br
+Content-Length: 23
+
+This is a test request. - http_connection.cpp:89
+20250309 21:45:17.117722  193116 INFO  TcpServer::removeConnectionInLoop [HttpServer] - connection HttpServer#1 - tcp_server.cpp:83

@@ -2,24 +2,22 @@
     "version": 8,
     "configurePresets": [
         {
-            "name": "GCC 11.4.0 x86_64-linux-gnu",
-            "displayName": "GCC 11.4.0 x86_64-linux-gnu",
+            "name": "Debug",
+            "displayName": "Debug",
             "description": "Using compilers: C = /usr/bin/gcc, CXX = /usr/bin/g++",
-            "binaryDir": "${sourceDir}/out/build/${presetName}",
+            "binaryDir": "${sourceDir}/build/debug",
             "cacheVariables": {
-                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
                 "CMAKE_C_COMPILER": "/usr/bin/gcc",
                 "CMAKE_CXX_COMPILER": "/usr/bin/g++",
                 "CMAKE_BUILD_TYPE": "Debug"
             }
         },
         {
-            "name": "GCC 11.4.0 x86_64-linux-gnu Release",
-            "displayName": "GCC 11.4.0 x86_64-linux-gnu Release",
+            "name": "Release",
+            "displayName": "Release",
             "description": "Using compilers: C = /usr/bin/gcc, CXX = /usr/bin/g++",
-            "binaryDir": "${sourceDir}/out/build/${presetName}",
+            "binaryDir": "${sourceDir}/build/release",
             "cacheVariables": {
-                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
                 "CMAKE_C_COMPILER": "/usr/bin/gcc",
                 "CMAKE_CXX_COMPILER": "/usr/bin/g++",
                 "CMAKE_BUILD_TYPE": "Release"
