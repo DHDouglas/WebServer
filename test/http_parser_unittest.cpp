@@ -1,3 +1,4 @@
+#include <cstddef>
 #include <gtest/gtest.h> 
 
 #include "http_parser.h"
@@ -34,18 +35,18 @@ using namespace std;
 
 class RequestFixture : public ::testing::Test {
 protected:
-    bool parse(const char* data, size_t& len, HttpRequest& request) {
-        parser.parse(data, len); 
+    bool parse(const char* data, const size_t len, size_t& parsed_size, HttpRequest& request) {
+        parser.parse(data, len, parsed_size); 
         return getParsedRequest(parser, request); 
     }
 
     bool getParsedRequest(HttpParser& parser, HttpRequest& request) {
-        if (parser.parsing_completion()) {
-            request.set_method(parser.get_method()); 
-            request.set_uri(parser.get_uri()); 
-            request.set_version(parser.get_version()); 
-            request.set_headers(parser.get_headers()); 
-            request.set_body(parser.get_body(), parser.get_body_size()); 
+        if (parser.parsingCompletion()) {
+            request.setMethod(parser.getMethod()); 
+            request.setUri(parser.getUri()); 
+            request.setVersion(parser.getVersion()); 
+            request.setHeaders(parser.getHeaders()); 
+            request.setBody(parser.getBody(), parser.getBodySize()); 
             return true; 
         }
         return false;
@@ -59,8 +60,9 @@ protected:
 TEST_F(RequestFixture, TestParseRequestLine) {
     const char* text = "GET /uri?arg1=test;arg2=test HTTP/1.1\r\n\r\n"; 
     HttpRequest parsed;
-    size_t consumed = strlen(text);  
-    parse(text, consumed, parsed); 
+    size_t size = strlen(text);  
+    size_t consumed = 0;
+    parse(text, size, consumed, parsed); 
     EXPECT_EQ(consumed, strlen(text));
     EXPECT_EQ(parsed.encode(), text); 
 }
@@ -72,9 +74,10 @@ TEST_F(RequestFixture, TestParseHeaders) {
         "Host: 127.0.0.1\r\n"
         "Custom-Header1: value\r\n"
         "\r\n"; 
-    HttpRequest parsed, expected;   
-    size_t consumed = strlen(text);  
-    parse(text, consumed, parsed); 
+    HttpRequest parsed, expected; 
+    size_t size = strlen(text);  
+    size_t consumed = 0;
+    parse(text, size, consumed, parsed); 
     EXPECT_EQ(consumed, strlen(text));
     EXPECT_EQ(parsed.encode(), text); 
 }
@@ -89,8 +92,9 @@ TEST_F(RequestFixture, TestParseBody) {
         "\r\n"
         "Hello World!"; 
     HttpRequest parsed, expected;   
-    size_t consumed = strlen(text);  
-    parse(text, consumed, parsed); 
+    size_t size = strlen(text);  
+    size_t consumed = 0; 
+    parse(text, size, consumed, parsed); 
     EXPECT_EQ(consumed, strlen(text));
     EXPECT_EQ(parsed.encode(), text); 
 }
@@ -111,14 +115,15 @@ TEST_F(RequestFixture, TestHttpRequest) {
         "Hello, World"; 
 
     HttpRequest parsed;
-    size_t consumed = strlen(text);  
-    parse(text, consumed, parsed); 
+    size_t size = strlen(text);  
+    size_t consumed = 0; 
+    parse(text, size, consumed, parsed); 
     EXPECT_EQ(consumed, strlen(text));
     EXPECT_EQ(parsed.encode(), text); 
 }
 
 
-
+// 测试多次解析
 TEST_F(RequestFixture, TestPartion) {
     const char* text = 
         "GET /index/html HTTP/1.1\r\n"
@@ -135,15 +140,15 @@ TEST_F(RequestFixture, TestPartion) {
 
     size_t len = strlen(text); 
     size_t delta = 1.0/6 * len; 
-    size_t consumed = delta; 
     size_t buf_size = 0;  
 
     using Result = HttpParser::ParseResult;
     Result ret; 
+
     for (size_t pos = 0; pos < len; ) {
         buf_size += delta; 
-        consumed = buf_size;
-        ret = parser.parse(text + pos, consumed); 
+        size_t consumed = 0; 
+        ret = parser.parse(text + pos, buf_size, consumed); 
         if (pos + consumed >= len) {
             EXPECT_EQ(ret, Result::SUCCESS); 
             EXPECT_EQ(pos + consumed, len);
@@ -168,8 +173,9 @@ TEST_F(RequestFixture, TestReuse) {
         "Content-Length: 12\r\n"
         "\r\n"
         "Hello World!";
-    size_t len = strlen(text1);  
-    ret = parser.parse(text1, len);
+    size_t len = strlen(text1);
+    size_t consumed = 0;   
+    ret = parser.parse(text1, len, consumed);
     EXPECT_EQ(len, strlen(text1));
     EXPECT_EQ(ret, Result::SUCCESS);  
     EXPECT_EQ(parser.encode(), text1);
@@ -188,21 +194,24 @@ TEST_F(RequestFixture, TestReuse) {
         "\r\n"
         "ABCDEFGHIJ"; 
     len = strlen(text2);
-    ret = parser.parse(text2, len);
+    consumed = 0;   
+    ret = parser.parse(text2, len, consumed);
     EXPECT_EQ(len, strlen(text2));
     EXPECT_EQ(ret, Result::SUCCESS);  
     EXPECT_EQ(parser.encode(), text2);
 
     const char* text3 = "GET /uri?arg1=test;arg2=test HTTP/1.1\r\n\r\n"; 
     len = strlen(text3);
-    ret = parser.parse(text3, len);
+    consumed = 0;   
+    ret = parser.parse(text3, len, consumed);
     EXPECT_EQ(len, strlen(text3));
     EXPECT_EQ(ret, Result::SUCCESS);  
     EXPECT_EQ(parser.encode(), text3);
 
     const char* text4 = "GET /index.html HTTP/1.1\r\nHost: example.com\r\nContent-Length: 17\r\n\r\nBody content here"; 
     len = strlen(text4);
-    ret = parser.parse(text4, len);
+    consumed = 0;   
+    ret = parser.parse(text4, len, consumed);
     EXPECT_EQ(len, strlen(text4));
     EXPECT_EQ(ret, Result::SUCCESS);  
     EXPECT_EQ(parser.encode(), text4);

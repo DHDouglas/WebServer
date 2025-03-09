@@ -37,23 +37,15 @@ public:
     const InetAddress& getLocalAddress() const { return local_addr_; }
     const InetAddress& getPeerAddress() const { return peer_addr_; }
 
-    void setConnectionCallback(const ConnectionCallback& cb) {
-        connCallback_ = cb;
-    }
+    // 用户回调
+    void setConnectionCallback(const ConnectionCallback& cb) { connCallback_ = cb;}
+    void setMessageCallback(const MessageCallback& cb) { msgCallback_ = cb; }
+    void setWriteCompleteCallback(const WriteCompleteCallback& cb) { writeCompleteCallback_ = cb; }
 
-    void setMessageCallback(const MessageCallback& cb) {
-        msgCallback_ = cb;
-    }
+    // 非用户回调. 该回调用于通知TcpServer移除持有的指向该对象的TcpConnectionPtr.
+    void setCloseCallback(const CloseCallback& cb) {  closeCallback_ = cb; }
 
-    void setWriteCompleteCallback(const WriteCompleteCallback& cb) {
-        writeCompleteCallback_ = cb;
-    }
-
-    // 该回调用于通知TcpServer移除持有的指向该对象的TcpConnectionPtr, 非用户回调. 
-    void setCloseCallback(const CloseCallback& cb) { 
-        closeCallback_ = cb;
-    }
-
+    // 供TcpServer调用
     // called when TcpServer accepts a new connection. should be called only once
     void connectionEstablished(); 
     // called when TcpServer has removed the conn from its map. should be called only once
@@ -61,12 +53,18 @@ public:
 
     void send(const void* message, size_t len); 
     void send(const std::string& message); 
-    void send(Buffer* message);   // swap the Buffer. 
+    void send(Buffer* message);
 
+    // 半关闭, 仅关闭写端
     void shutdown(); // 调用shutdownInLoop, 后者保证在EventLoop所属的IO线程调用
+    void forceClose(); 
 
 
 private:
+    // - kConnecting: 调用connectionEstablished()之前
+    // - kkConnected: connectionEstablished()调用后.
+    // - kDisconnecting: 调用shutdown关闭写端之后, 半关闭状态
+    // - kDisconnected: handleClose()执行后, 全关闭状态.
     enum class State { kConnecting, kConnected, kDisconnected, kDisconnecting }; 
     void setState(State s) { state_ = s; }
     const char* stateToString() const;
@@ -77,6 +75,7 @@ private:
 
     void sendInLoop(const void* message, size_t len); 
     void shutdownInLoop();  
+    void forceCloseInLoop();
 
 
 private:

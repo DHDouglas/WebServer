@@ -22,15 +22,9 @@ class Timer {
 public:
     Timer(TimerCallback cb, Timestamp exp, Duration interval) 
         : callback_(cb), expiration_(exp), interval_(interval) {}
+    // ~Timer();
 
-    ~Timer() {
-        // std::cerr << "当前Timer: " << this << std::endl; 
-    }
-
-    void run() const { 
-        callback_(); 
-    }
-
+    void run() const {  callback_();  }
     void restart(const Timestamp& now) {
         if (repeatable()) {
             expiration_ = now + interval_;
@@ -39,13 +33,8 @@ public:
         }
     }
 
-    Timestamp getExpiration() const { 
-        return expiration_; 
-    }
-
-    bool repeatable() { 
-        return interval_ != Duration(0);  
-    }
+    Timestamp getExpiration() const {  return expiration_; }
+    bool repeatable() { return interval_ != Duration(0); }
 
 private:
     TimerCallback callback_;   // 定时器回调任务
@@ -73,7 +62,7 @@ private:
     void removeTimerInLoop(const std::weak_ptr<Timer>& wk_ptr_timer);  
     void handleExpiredTimer();    // timerfd触发事件时, 处理到期的定时器事件
     void checkUpdateTimerfd();    // 检查是否需要更新timerfd的到期时间.
-    int create_timerfd();
+    int createTimerfd();
 
 private:
     EventLoop* loop_;

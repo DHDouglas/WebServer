@@ -1,14 +1,21 @@
 开发过程中的测试顺序:
-eventloop_test
-eventloop2_test
-channel_epoller_test
-thread_test
-timer_test
-timer_self_cancel_test
-pending_functor_in_loop_test
-eventloop_thread_test
-inet_address_test
-acceptor_test
-logfile_test
-logger_test
-asyclogging_test
+- eventloop_test
+- eventloop2_test
+- channel_epoller_test
+- thread_test
+- timer_test
+- timer_self_cancel_test
+- pending_functor_in_loop_test
+- eventloop_thread_test
+- inet_address_unittest
+- acceptor_test
+- logfile_test
+- logger_test
+- asyclogging_test
+- tcpserver_test
+- buffer_unittest
+- tcpconn_send_test
+- tcpconn_send2_test
+- tcpconn_sent3_test
+- http_parser_unittest
+- http_parser_with_tcp_server_test

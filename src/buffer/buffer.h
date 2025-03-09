@@ -35,7 +35,7 @@
 
 class Buffer {
 public:
-    explicit Buffer(size_t initBuffSize = kInitialSize); 
+    explicit Buffer(size_t init_size = kInitialSize); 
     ~Buffer() = default;  
 
     void swap(Buffer& rhs); 
@@ -62,8 +62,8 @@ public:
     void append(const std::string& str);
     void append(const void* data, size_t len);  
 
-    ssize_t readFd(int fd, int* Errno);     // 从fd中读取到缓冲区
-    // ssize_t WriteFd(int fd, int* Errno);    // 向fd中写入缓冲区内容. 
+    ssize_t readFd(int fd, int* save_errno);     // 从fd中读取到缓冲区
+    // ssize_t WriteFd(int fd, int* save_errno);    // 向fd中写入缓冲区内容. 
 
 public:
     static const size_t kInitialSize = 1024;

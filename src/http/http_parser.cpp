@@ -1,4 +1,5 @@
 #include "http_parser.h"
+#include <cassert>
 
 using namespace std; 
 
@@ -24,7 +25,7 @@ void HttpParser::reset() {
 }
 
 
-HttpParser::ParseResult HttpParser::parse(const char* data, size_t& len) {
+HttpParser::ParseResult HttpParser::parse(const char* data, const size_t len, size_t& parsed_size) {
     if (parse_phase == ParsePhase::DONE) {
         reset(); 
     }
@@ -32,23 +33,18 @@ HttpParser::ParseResult HttpParser::parse(const char* data, size_t& len) {
     this->end = data + len; 
     size_t msg_size = header_offset + body_offset;  // 记录当前已解析得到的消息字节数. 
 
-    // ! 返回解析结果, 通过参数len接收原data长度, 再将其修改为已解析的字节数. 
-    // ! 头部的循环处理不需要在这里重入, parser_header()内部本身就是一个"从状态机", 一直读取直至`\r\n\r\n`出现才结束. 
-    // ! 所以只需要三种解析结果, SUCCESS(DONE), AGAIN(未完成), ERROR.
-    // ! Phase_Phase可以多加一个DONE状态, 标记解析已全部结束. 
-
     ParseResult ret = ParseResult::SUCCESS; 
     while (ret == ParseResult::SUCCESS && parse_phase != ParsePhase::DONE) {
         switch (parse_phase) {
             case ParsePhase::REQUEST_LINE: {
-                ret = parse_request_line(); 
+                ret = parseRequestLine(); 
                 if (ret == ParseResult::SUCCESS) {
                     parse_phase = ParsePhase::HEADER; 
                 }
             }; break;
 
             case ParsePhase::HEADER: { 
-                ret = parse_header(); 
+                ret = parseHeader(); 
                 if (ret == ParseResult::SUCCESS) {
                     if (this->content_length > 0 || this->chunked) {  // POST且content-length非0, 或者存在chunk
                         parse_phase = ParsePhase::BODY;
@@ -59,7 +55,7 @@ HttpParser::ParseResult HttpParser::parse(const char* data, size_t& len) {
             } break; 
 
             case ParsePhase::BODY: {
-                ret = parse_body(); 
+                ret = parseBody(); 
                 if (ret == ParseResult::SUCCESS) {
                     parse_phase = ParsePhase::DONE; 
                 }
@@ -69,13 +65,14 @@ HttpParser::ParseResult HttpParser::parse(const char* data, size_t& len) {
         }
     }
 
-    // 计算此次调用中解析得到的有效字节数, <=len.
-    len = header_offset + body_offset - msg_size;  
+    // 计算此次调用中解析得到的有效字节数.
+    assert(parsed_size <= len); 
+    parsed_size = header_offset + body_offset - msg_size; 
     return ret; 
 };
 
 
-HttpParser::ParseResult HttpParser::parse_request_line() {
+HttpParser::ParseResult HttpParser::parseRequestLine() {
     using State = ParseRequestLineState; 
     const char* method, *uri, *version; 
     while (pos != end) {
@@ -88,7 +85,7 @@ HttpParser::ParseResult HttpParser::parse_request_line() {
             case State::METHOD: {
                 if (*pos == ' ') {
                     parse_rl_state = State::BEFORE_URI; 
-                    if (!check_method(method, pos - method)) {
+                    if (!checkMethod(method, pos - method)) {
                         return ParseResult::ERROR; 
                     }
                     header_offset += pos - method + 1;    // 包括空格. 
@@ -104,7 +101,7 @@ HttpParser::ParseResult HttpParser::parse_request_line() {
             case State::URI: {
                 if (*pos == ' ') {
                     parse_rl_state = State::BEFORE_VERSION; 
-                    if (!check_uri(uri, pos - uri)) {
+                    if (!checkUri(uri, pos - uri)) {
                         return ParseResult::ERROR; 
                     }
                     header_offset += pos - uri + 1;
@@ -120,7 +117,7 @@ HttpParser::ParseResult HttpParser::parse_request_line() {
             case State::VERSION: {
                 if (*pos == '\r') {
                     parse_rl_state = State::LF; 
-                    if (!check_version(version, pos - version)) {
+                    if (!checkVersion(version, pos - version)) {
                         return ParseResult::ERROR; 
                     }
                     header_offset += pos - version + 1; 
@@ -152,13 +149,13 @@ HttpParser::ParseResult HttpParser::parse_request_line() {
         case State::BEFORE_METHOD:
         case State::BEFORE_URI:
         case State::BEFORE_VERSION: 
-        case State::LF: abort(); 
+        case State::LF: break; 
     }
     return ParseResult::AGAIN; 
 }
 
 
-HttpParser::ParseResult HttpParser::parse_header() {
+HttpParser::ParseResult HttpParser::parseHeader() {
     // 解析name时利用一个name_buf缓冲区记录name, 而value则直接用指针指示起始位置. 
     // 当得到完整的name-value后, 再记录. 
     using State = ParseHeaderState;
@@ -204,7 +201,7 @@ HttpParser::ParseResult HttpParser::parse_header() {
 
             case State::VALUE: {
                 if (*pos == '\r') {
-                    if (!check_header(name_buf, name_buf_pos - 1, value, pos - value)) {   // name_buf_pos-1, 不计入'\0'. 
+                    if (!checkHeader(name_buf, name_buf_pos - 1, value, pos - value)) {   // name_buf_pos-1, 不计入'\0'. 
                         return ParseResult::ERROR; 
                     }
                     parse_hd_state = State::LF; 
@@ -251,7 +248,7 @@ HttpParser::ParseResult HttpParser::parse_header() {
 }
 
 
-HttpParser::ParseResult HttpParser::parse_body() {
+HttpParser::ParseResult HttpParser::parseBody() {
     // 剩余长度: 
     size_t len = end - pos; 
     if (this->chunked) {
@@ -271,7 +268,7 @@ HttpParser::ParseResult HttpParser::parse_body() {
 }
 
 
-bool HttpParser::check_method(const char* str, size_t len) {
+bool HttpParser::checkMethod(const char* str, size_t len) {
     bool ret = false; 
     if (strncasecmp(str, "GET",  len) == 0) ret = true; 
     if (strncasecmp(str, "POST", len) == 0) ret = true;
@@ -282,12 +279,12 @@ bool HttpParser::check_method(const char* str, size_t len) {
     return ret;
 }
 
-bool HttpParser::check_uri(const char* str, size_t len) {
+bool HttpParser::checkUri(const char* str, size_t len) {
     this->uri = string(str, len); 
     return true; 
 }
 
-bool HttpParser::check_version(const char* str, size_t len) {
+bool HttpParser::checkVersion(const char* str, size_t len) {
     if (strncasecmp(str, "HTTP/1.0", len) == 0 || strncasecmp(str, "HTTP/0", len) == 0) {
         this->version = string(str, len); 
         this->keep_alive = false; 
@@ -301,7 +298,7 @@ bool HttpParser::check_version(const char* str, size_t len) {
 }
 
 
-bool HttpParser::check_header(const char* name, size_t n_len, const char* value, size_t v_len) {
+bool HttpParser::checkHeader(const char* name, size_t n_len, const char* value, size_t v_len) {
     switch (n_len) {
         case 10: {
             if (strncasecmp(name, "Connection", 10) == 0) {
@@ -335,7 +332,7 @@ bool HttpParser::check_header(const char* name, size_t n_len, const char* value,
 }
 
 
-string HttpParser::encode() {
+string HttpParser::encode() const {
     assert(parse_phase == ParsePhase::DONE);
     string ret = method + " " + uri + " " + version + "\r\n";
     for (auto& p : headers) {
@@ -347,34 +344,34 @@ string HttpParser::encode() {
 }
 
 
-bool HttpParser::parsing_completion() {
+bool HttpParser::parsingCompletion() {
     return parse_phase == ParsePhase::DONE;
 }
 
-const char* HttpParser::get_method() {
+const char* HttpParser::getMethod() const {
     return method.data(); 
 }
 
-const char* HttpParser::get_uri() {
+const char* HttpParser::getUri() const {
     return uri.data();
 }
 
-const char* HttpParser::get_version() {
+const char* HttpParser::getVersion() const {
     return version.data(); 
 }
 
-const char* HttpParser::get_body() {
+const char* HttpParser::getBody() const {
     return body.data(); 
 }
 
-size_t HttpParser::get_body_size() {
+size_t HttpParser::getBodySize() const {
     return body.size(); 
 }
 
-const vector<pair<string, string>>& HttpParser::get_headers() {
+const vector<pair<string, string>>& HttpParser::getHeaders() const {
     return headers; 
 }
 
-bool HttpParser::get_keep_alive() {
+bool HttpParser::getKeepAlive() const {
     return keep_alive; 
 }

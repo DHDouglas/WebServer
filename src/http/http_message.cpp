@@ -2,7 +2,16 @@
 
 using namespace std;
 
-bool HttpMessage::set_version(const string str) {
+
+string getHttpStatusCodeString(HttpStatusCode code) {
+    auto it =  STATUS_CODE_PHASE.find(code);
+    if (it == STATUS_CODE_PHASE.end()) {
+        return ""; 
+    }
+    return it->second.first; 
+}
+
+bool HttpMessage::setVersion(const string str) {
     if (str == "HTTP/1.1" || str == "HTTP/1.0" || str == "HTTP/0") {
         version = std::move(str);  
         return true;
@@ -11,50 +20,42 @@ bool HttpMessage::set_version(const string str) {
 }
 
 
-bool HttpMessage::add_header(const string name, const string value) {
+bool HttpMessage::addHeader(const string name, const string value) {
     if (name.length() == 0 || value.length() == 0) return false; 
     headers.emplace_back(std::move(name), std::move(value)); 
     return true;
 }
 
 
-bool HttpMessage::set_header(const string name, const string value) {
+bool HttpMessage::setHeader(const string name, const string value) {
     for (auto& h : headers) {
         if (h.first.length() == name.length() && strcasecmp(h.first.c_str(), name.c_str()) == 0) {
             h.second = std::move(value); 
             return true; 
         }
     }
-    return add_header(std::move(name), std::move(value)); 
+    return addHeader(std::move(name), std::move(value)); 
 }
 
 
-bool HttpMessage::set_headers(vector<pair<string, string>> headers) {
+bool HttpMessage::setHeaders(vector<pair<string, string>> headers) {
     this->headers = std::move(headers); 
     return true;
 }
 
 
-bool HttpMessage::set_body(const void* data, size_t len) {
+bool HttpMessage::setBody(const void* data, size_t len) {
     if (len > 0 && data != nullptr) {
         body = data; 
         body_size = len; 
-        set_header("Content-Length", to_string(body_size));   // 自动填充Content-Length头
         // TODO: if chunked
         return true;
     }
     return false;
 }
 
-const void* HttpMessage::get_body() {
-    return body;
-}
-
-size_t HttpMessage::get_body_size() {
-    return body_size; 
-}
-
-int HttpMessage::encode(struct iovec vectors[], int max) {
+int HttpMessage::encode(struct iovec vectors[], int max) const{
+    fillStartLine();
     assert(max >= 6); 
     vectors[0].iov_base = (void*)startline[0].base;  // static_cast<void*>(const_cast<char*>(version.c_str())); 
     vectors[0].iov_len = startline[0].len; 
@@ -97,7 +98,7 @@ int HttpMessage::encode(struct iovec vectors[], int max) {
     vectors[i].iov_len = 2; 
     ++i;
 
-    if (body_size > 0) {
+    if (body && body_size > 0) {
         if (i == max) {
             errno = EOVERFLOW;
             return false; 
@@ -108,9 +109,38 @@ int HttpMessage::encode(struct iovec vectors[], int max) {
     return i + 1; 
 }
 
+#include "logger.h"
+void HttpMessage::encode(Buffer* buf) const {
+    fillStartLine();  
+    buf->append(startline[0].base, startline[0].len); 
+    buf->append(" ");
+    buf->append(startline[1].base, startline[1].len);
+    buf->append(" ");
+    buf->append(startline[2].base, startline[2].len);
+    buf->append("\r\n"); 
+    for (auto& t : headers) {
+        buf->append(t.first.data(), t.first.length()); 
+        buf->append(": ");
+        buf->append(t.second.data(), t.second.length());
+        buf->append("\r\n"); 
+    }
+    buf->append("\r\n");
+    if (body && body_size > 0) {
+        LOG_TRACE << " HttpMessage::encode buf->append(body, body_size), body: " 
+                  << body << "body_size: " << body_size; 
+        buf->append(body, body_size);
+    }
+}
 
-string HttpMessage::encode() {
-    string ret;
+
+string HttpMessage::encode() const {
+    fillStartLine(); 
+    string ret = string(startline[0].base, startline[0].len);
+    ret += " ";
+    ret += string(startline[1].base, startline[1].len);
+    ret += " ";
+    ret += string(startline[2].base, startline[2].len);
+    ret += "\r\n";
     for (auto& t: headers) {
         ret += t.first;
         ret += ": ";
@@ -122,8 +152,9 @@ string HttpMessage::encode() {
     return ret;
 }
 
-// --------------------HttpRequest
-bool HttpRequest::set_method(HttpMethod method) {
+// ----------------------------------------HttpRequest begin
+
+bool HttpRequest::setMethod(HttpMethod method) {
     switch(method) {
         case HttpMethod::GET: 
             this->method = "GET"; break;
@@ -140,8 +171,7 @@ bool HttpRequest::set_method(HttpMethod method) {
     return true;
 }
 
-
-bool HttpRequest::set_method(const string str) {
+bool HttpRequest::setMethod(const string str) {
     if (str == "GET" || str == "HEAD" || str == "POST") {
         this->method = str;
         return true; 
@@ -149,32 +179,34 @@ bool HttpRequest::set_method(const string str) {
     return false; 
 }
 
-
-bool HttpRequest::set_uri(const string str) {
+bool HttpRequest::setUri(const string str) {
     this->uri = std::move(str);
     return true;
 }
 
-
-int HttpRequest::encode(struct iovec vectors[], int max) {
+void HttpRequest::fillStartLine() const {
     startline[0].base = method.data(); 
     startline[0].len = method.length();
     startline[1].base = uri.data();
     startline[1].len = uri.length();
     startline[2].base = version.data();
     startline[2].len = version.length(); 
-    return HttpMessage::encode(vectors, max); 
+    assert(startline[0].base);
+    assert(startline[0].len > 0);
+    assert(startline[1].base);
+    assert(startline[1].len > 0); 
+    assert(startline[2].base);
+    assert(startline[2].len > 0); 
 }
 
-
-string HttpRequest::encode() {
-    string ret = method + " " + uri + " " + version + "\r\n"; 
-    return ret + HttpMessage::encode();
-}
+// ----------------------------------------HttpRequest end
 
 
-// --------------------HttpResponse
-bool HttpResponse::set_status(HttpStatusCode code) {
+
+
+// ----------------------------------------HttpResponse begin
+
+bool HttpResponse::setStatus(HttpStatusCode code) {
     auto p = STATUS_CODE_PHASE.find(code);
     if (p != STATUS_CODE_PHASE.end()) {
         this->code = p->second.first;
@@ -184,20 +216,19 @@ bool HttpResponse::set_status(HttpStatusCode code) {
     return false; 
 }
 
-
-int HttpResponse::encode(struct iovec vectors[], int max) {
+void HttpResponse::fillStartLine() const {
     startline[0].base = version.data(); 
     startline[0].len = version.length();
     startline[1].base = code.data();
     startline[1].len = code.length();
     startline[2].base = phase.data();
     startline[2].len = phase.length(); 
-    return HttpMessage::encode(vectors, max); 
+    assert(startline[0].base);
+    assert(startline[0].len > 0);
+    assert(startline[1].base);
+    assert(startline[1].len > 0); 
+    assert(startline[2].base);
+    assert(startline[2].len > 0); 
 }
 
-
-string HttpResponse::encode() {
-    string ret = version + " " + code + " " + phase + "\r\n"; 
-    return ret + HttpMessage::encode();
-}
-
+// ----------------------------------------HttpResponse end

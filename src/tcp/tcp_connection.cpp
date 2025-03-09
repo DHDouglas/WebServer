@@ -5,7 +5,6 @@
 #include <cassert>
 #include <cerrno>
 #include <cstddef>
-#include <mutex>
 
 using namespace std;
 
@@ -74,17 +73,16 @@ void TcpConnection::handleWrite() {
                             output_buffer_.peek(), 
                             output_buffer_.readableBytes()); 
         if (n > 0) {
+            LOG_TRACE << "TcpConnection::handleWrite send " << n << "bytes"; 
             output_buffer_.retrieve(n);
             if (output_buffer_.readableBytes() == 0) {  // TCP发送缓冲区清空, 数据发送完毕, 取消监听EPOLLOUT.
                 channel_.disableWriting(); 
                 if (writeCompleteCallback_) {
                     loop_->addToQueueInLoop(bind(writeCompleteCallback_, shared_from_this())); 
                 }
-                if (state_ == State::kDisconnecting) {
+                if (state_ == State::kDisconnecting) {  // 正在断开连接的过程中, 关闭写端.
                     shutdownInLoop(); 
                 }
-            } else {
-                LOG_TRACE << "Need to wrtie more data"; 
             }
         } else {
             LOG_SYSERR << "TcpConnection::handleWrite";
@@ -104,7 +102,9 @@ void TcpConnection::handleClose() {
 
     TcpConnectionPtr guard_this(shared_from_this()); 
     connCallback_(guard_this);   // 用户回调
-    closeCallback_(guard_this);  // 用于通知TcpServer移除持有的指向该对象的TcpConnectionPtr, 非用户回调. 
+    closeCallback_(guard_this);  // 非用户回调, 为TcpServer注册的removeConnection回调. 作用:
+                                 // 1) 告知TcpServer移除持有的指向该对象的TcpConnectionPtr.
+                                 // 2) 由TcpServer调用TcpConnection::connectionEstablished(). 
 }
 
 void TcpConnection::handleError() {
@@ -125,7 +125,6 @@ void TcpConnection::connectionEstablished() {
     loop_->assertInLoopThread(); 
     assert(state_ == State::kConnecting);
     setState(State::kConnected);
-
     // 将该TcpConnection对象绑定到channel_
     // 确保channel_执行handleEvent()时该TcpConnection对象不会被析构
     channel_.tie(shared_from_this());  
@@ -161,6 +160,21 @@ void TcpConnection::shutdownInLoop() {
     }
 }
 
+void TcpConnection::forceClose() {
+    if (state_ == State::kConnected || state_ == State::kDisconnecting) {
+        setState(State::kDisconnecting); 
+        // 必须addToQueue作为Pendingfunctor执行, 避免handleEvent时直接析构TcpConnection, 导致channel也无了. 
+        loop_->addToQueueInLoop(bind(&TcpConnection::forceCloseInLoop, shared_from_this()));
+    }
+}
+
+void TcpConnection::forceCloseInLoop() {
+    loop_->assertInLoopThread();
+    if (state_ == State::kConnected || state_ == State::kDisconnecting) {
+        handleClose();
+    }
+}
+
 
 const char* TcpConnection::stateToString() const {
     switch (state_) {
@@ -178,16 +192,21 @@ const char* TcpConnection::stateToString() const {
 }
 
 
-
 void TcpConnection::send(const std::string& message) {
     send(message.c_str(), message.length()) ;
+}
+
+void TcpConnection::send(Buffer* buf) {
+    send(buf->peek(), buf->readableBytes()); 
+    // send()保证, 若数据不能立即发送或单次发送不完全部数据, 会进行拷贝或加入到Tcp发送缓冲区. 
+    // 因此这里可以直接清除应用层缓冲. 
+    buf->retrieveAll(); 
 }
 
 // const char*可以隐式转换为const void*, 无需单独重载. 
 void TcpConnection::send(const void* data, size_t len) {
     // send(string(static_cast<const char*>(data), len)); 
     if (state_ == State::kConnected) {
-        LOG_TRACE << "TcpConnection::send"; 
         if (loop_->isInLoopThread()) {
             sendInLoop(data, len); 
         } else {
@@ -216,7 +235,6 @@ void TcpConnection::sendInLoop(const void* data, size_t len) {
         LOG_WARN << "disconnected, give up writing";
         return;
     }
-
     // 两种情况:
     // 1) 如果channel空闲且输出缓冲区为空, 即没有尚未发送出去的预留数据, 则直接向fd写, 不会导致数据乱序
     //    从而省略OutputBuffer->fd的过程(监听EPOLLOUT, 等待可写, 拷贝开销等)
@@ -238,7 +256,8 @@ void TcpConnection::sendInLoop(const void* data, size_t len) {
             }
         }
     }
-
+    LOG_TRACE << "TcpConnection::send send " << n_written 
+              << " bytes, remaining: " << remaining; 
     assert(remaining <= len); 
     // 还有剩余数据
     if (!fault_error && remaining > 0) {  

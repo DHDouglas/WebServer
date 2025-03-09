@@ -60,8 +60,8 @@ void TcpServer::newConnection(int sockfd, const InetAddress& peer_addr) {
     connections_[conn_name] = conn; 
 
     // conn的回调
-    conn->setConnectionCallback(connCallback_);
-    conn->setMessageCallback(msgCallback_);
+    conn->setConnectionCallback(connCallback_);  // 用户回调
+    conn->setMessageCallback(msgCallback_);      // 用户回调
     conn->setWriteCompleteCallback(writeCompleteCallback_); 
     conn->setCloseCallback(
         bind(&TcpServer::removeConnection, this, placeholders::_1));
