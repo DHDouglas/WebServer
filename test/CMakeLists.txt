@@ -62,7 +62,6 @@ target_link_libraries(http_parser_unittest PRIVATE MyObjects)
 target_link_libraries(http_parser_unittest PRIVATE gtest gtest_main pthread)
 add_test(NAME http_parser_unittest COMMAND http_parser_unittest)
 
-
 add_executable(http_parser_with_tcp_server_test http_parser_with_tcp_server_test.cpp)
 target_link_libraries(http_parser_with_tcp_server_test PRIVATE MyObjects)
 # target_link_libraries(http_parser_unittest PRIVATE gtest gtest_main pthread)
@@ -70,3 +69,6 @@ target_link_libraries(http_parser_with_tcp_server_test PRIVATE MyObjects)
 
 add_executable(httpserver_demo_test httpserver_demo_test.cpp)
 target_link_libraries(httpserver_demo_test PRIVATE MyObjects)
+
+add_executable(config_test config_test.cpp)
+target_link_libraries(config_test PRIVATE MyObjects)

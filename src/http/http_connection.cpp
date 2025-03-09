@@ -178,6 +178,7 @@ HttpStatusCode HttpConnection::processPath(string& path) {
     } else {
         real_path = root_path_ + path; 
     }
+    
     // 路径解析, 得到绝对路径
     char resolved_path[PATH_MAX]; 
     if (realpath(real_path.c_str(), resolved_path) == nullptr) {

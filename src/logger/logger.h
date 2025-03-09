@@ -1,11 +1,7 @@
 #pragma once 
 
-#include <cstdio>
-#include <ctime>
-
 #include "log_stream.h"
 #include "timestamp.h"
-#include "thread.h"
 
 class AsyncLogger; 
 
@@ -85,6 +81,8 @@ private:
 extern Logger::LogLevel g_log_level; 
 extern Logger::OutputFunc g_output; 
 extern Logger::FlushFunc g_flush;  
+
+extern const char* LogLevelName[Logger::NUM_LOG_LEVELS];
 
 inline Logger::LogLevel Logger::getLogLevel() {
     return g_log_level; 

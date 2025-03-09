@@ -1,4 +1,5 @@
 #include "logger.h"
+#include "thread.h"
 
 Logger::LogLevel g_log_level = Logger::INFO; 
 
@@ -16,12 +17,12 @@ Logger::FlushFunc g_flush = defaultFlush;
 
 
 const char* LogLevelName[Logger::NUM_LOG_LEVELS] = {
-  "TRACE ",
-  "DEBUG ",
-  "INFO  ",
-  "WARN  ",
-  "ERROR ",
-  "FATAL ",
+    "TRACE ",
+    "DEBUG ",
+    "INFO  ",
+    "WARN  ",
+    "ERROR ",
+    "FATAL ",
 };
 
 

@@ -1,7 +1,12 @@
-#include "inet_address.h"
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <cstring>
+#include <cstddef>
+#include <cstdint>
+
+#include "inet_address.h"
+
 
 using namespace std;
 

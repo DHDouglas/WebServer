@@ -2,11 +2,7 @@
 
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <cstdint>
-#include <cstring>
 #include <string>
-#include <sys/socket.h>
-
 #include "logger.h"
 
 class InetAddress {
