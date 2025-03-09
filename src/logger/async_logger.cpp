@@ -19,6 +19,7 @@ AsyncLogger::AsyncLogger(const string& log_fname,
     basename_(log_fname), 
     dir_(dir),
     roll_size_(roll_size),
+    thread_(bind(&AsyncLogger::threadFunc, this), "Logging"),
     latch_(1), 
     current_buffer_(make_unique<Buffer>()),
     next_buffer_(make_unique<Buffer>()),
@@ -37,20 +38,15 @@ AsyncLogger::~AsyncLogger() {
 }
 
 void AsyncLogger::start() {
-    if (running_) return; 
-    assert(!thread_);  
     running_ = true;
-    thread_ = make_unique<std::thread>(&AsyncLogger::threadFunc, this);  
+    thread_.start();
     latch_.wait();   // 阻塞直至工作线程启动后才返回. 
 }
 
 void AsyncLogger::stop() {
     running_ = false;
     cond_.notify_all(); 
-    if (thread_ && thread_->joinable()) {
-        thread_->join(); 
-    }
-    thread_.reset(); 
+    thread_.join();
 }
 
 void AsyncLogger::append(const char* logline, int len) {

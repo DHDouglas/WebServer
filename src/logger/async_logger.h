@@ -5,6 +5,7 @@
 #include <thread>
 #include <mutex>
 
+#include "thread.h"
 #include "log_stream.h"
 #include "timestamp.h"
 #include "count_down_latch.h"
@@ -30,7 +31,7 @@ private:
     std::string basename_; 
     std::string dir_; 
     const off_t roll_size_;   
-    std::unique_ptr<std::thread> thread_; 
+    Thread thread_;
     CountDownLatch latch_;   // 用于阻塞start()直至工作线程启动
     std::mutex mtx_; 
     std::condition_variable cond_;
