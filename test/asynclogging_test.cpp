@@ -13,7 +13,7 @@ unique_ptr<AsyncLogger> logger;
 std::once_flag init_flag; 
 
 void initAsyncLogger() {
-    logger = make_unique<AsyncLogger>("TestLog", kRollSize, kFlushInterval); 
+    logger = make_unique<AsyncLogger>("TestLog", "log", kRollSize, kFlushInterval); 
     logger->start();  // 开启后端线程, 负责将AsycLogger缓冲区中的日志写入文件.
 }
 

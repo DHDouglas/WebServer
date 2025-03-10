@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PROGRAM="./build/debug/bin/http_server"
+PROGRAM="./build/Debug/bin/http_server"
 
 IP=""                        # 监听地址. 为空时监听所有地址.
 PORT=8080                    # 监听端口.
@@ -33,4 +33,4 @@ $PROGRAM "${ARGS[@]}"
 # $PROGRAM "-i $IP -p $PORT -j $THREAD_NUM -r $ROOT_PATH -t $TIMEOUT \
 #     -f $LOG_FNAME -R $LOG_DIR -l $LOG_LEVEL -s $LOG_ROLLSIZE -u $LOG_FLUSH_TIME"
 
-# ./build/release/bin/http_server -p 8080 -j 5 -r "./recources" -t 30 -f "HttpServerLog" -R "./log" -l 2 -s 500000000 -u 2
+# ./build/Release/bin/http_server -p 8080 -j 5 -r "./recources" -t 30 -f "HttpServerLog" -R "./log" -l 2 -s 500000000 -u 2

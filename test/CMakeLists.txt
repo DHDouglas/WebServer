@@ -64,11 +64,35 @@ add_test(NAME http_parser_unittest COMMAND http_parser_unittest)
 
 add_executable(http_parser_with_tcp_server_test http_parser_with_tcp_server_test.cpp)
 target_link_libraries(http_parser_with_tcp_server_test PRIVATE MyObjects)
-# target_link_libraries(http_parser_unittest PRIVATE gtest gtest_main pthread)
-# add_test(NAME http_parser_unittest COMMAND http_parser_unittest)
 
 add_executable(httpserver_demo_test httpserver_demo_test.cpp)
 target_link_libraries(httpserver_demo_test PRIVATE MyObjects)
 
 add_executable(config_test config_test.cpp)
 target_link_libraries(config_test PRIVATE MyObjects)
+
+
+add_custom_target(all_test_exec DEPENDS
+    eventloop1_test
+    eventloop2_test
+    channel_epoller_test
+    thread_test
+    timer_test
+    timer_self_cancel_test
+    pending_functor_in_loop_test
+    eventloop_thread_test 
+    acceptor_test
+    logfile_test
+    logger_test
+    asynclogging_test
+    inet_address_unittest
+    tcpserver_test
+    buffer_unittest
+    tcpconn_send_test
+    tcpconn_send2_test
+    tcpconn_send3_test
+    http_parser_unittest
+    http_parser_with_tcp_server_test
+    httpserver_demo_test
+    config_test
+)

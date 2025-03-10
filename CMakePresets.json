@@ -1,5 +1,6 @@
 {
-    "version": 8,
+    "version": 3,
+    "cmakeMinimumRequired": { "major": 3, "minor": 22, "patch": 0},
     "configurePresets": [
         {
             "name": "Debug",
@@ -22,6 +23,18 @@
                 "CMAKE_CXX_COMPILER": "/usr/bin/g++",
                 "CMAKE_BUILD_TYPE": "Release"
             }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "Debug",
+            "configurePreset": "Debug",
+            "jobs": 8 
+        },
+        {
+            "name": "Release",
+            "configurePreset": "Release",
+            "jobs": 8
         }
     ]
 }

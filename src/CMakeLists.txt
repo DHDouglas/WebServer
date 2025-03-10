@@ -30,7 +30,7 @@ target_include_directories(MyObjects PUBLIC ${INCLUDE_DIRS})
 add_executable(http_server main.cpp)
 target_link_libraries(http_server PRIVATE MyObjects)
 # set_target_properties(http_server PROPERTIES
-#     RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin
+#     RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}   # 单独输出到bin.
 # )
 
 # 为所有头文件在src/include/目录下创建符号链接. 

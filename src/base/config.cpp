@@ -49,9 +49,9 @@ void Config::parseArgs(int argc, char* argv[]) {
             } 
         }
     }
-    LogFile::ensureDirExists(log_dir_); 
     root_path_ = ensureAbsoluteRootPath(root_path_);
-    log_dir_ = ensureAbsoluteRootPath(log_dir_);
+    // LogFile::ensureDirExists(log_dir_); 
+    // log_dir_ = ensureAbsoluteRootPath(log_dir_);
 }
 
 void Config::printHelp(const char* program) const {
