@@ -1,12 +1,11 @@
-#include <cassert>
-#include <memory>
-#include <cassert>
-
 #include "async_logger.h"
+
+#include <cassert>
+#include <functional>
+#include <cstring>
+
 #include "log_file.h"
 #include "timestamp.h"
-
-
 
 using namespace std;
 

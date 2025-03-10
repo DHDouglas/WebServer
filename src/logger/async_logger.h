@@ -2,12 +2,10 @@
 #include <condition_variable>
 #include <vector>
 #include <memory>
-#include <thread>
 #include <mutex>
 
 #include "thread.h"
 #include "log_stream.h"
-#include "timestamp.h"
 #include "count_down_latch.h"
 
 class AsyncLogger {

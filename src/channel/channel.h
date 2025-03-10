@@ -1,12 +1,8 @@
 #pragma once
 
-#include <unistd.h>
 #include <sys/epoll.h>
 #include <functional>
 #include <memory>
-#include <cassert>
-#include <cstdlib>
-#include <sstream>
 
 #include "timestamp.h"
 

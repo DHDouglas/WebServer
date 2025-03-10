@@ -1,23 +1,17 @@
 #pragma once 
 
 #include <atomic>
-#include <unistd.h>
-#include <cassert>
-#include <thread> 
-#include <cstdio>
 #include <vector>
 #include <memory>
 #include <mutex>
-#include <cstdlib>
-#include <sys/eventfd.h>
+#include <functional>
 
-#include "epoller.h"
 #include "timer.h"
-#include "thread.h"
-#include "logger.h"
 #include "timestamp.h"
 
 class Channel; 
+
+class Epoller;
 
 class EventLoop {
 public:

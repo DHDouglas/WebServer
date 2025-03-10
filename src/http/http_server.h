@@ -1,14 +1,13 @@
 #pragma once
 
 #include <memory>
-#include "inet_address.h"
 #include "tcp_server.h"
+#include "eventloop.h"
 #include "tcp_connection.h"
-#include "http_connection.h"
-#include "logger.h"
 #include "async_logger.h"
 #include "config.h"
 
+class HttpConnection;
 
 class HttpServer {
 public:

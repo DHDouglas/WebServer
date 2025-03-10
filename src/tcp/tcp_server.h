@@ -4,15 +4,12 @@
 #include <functional>
 #include <map>
 #include <string>
-#include <netinet/in.h>
-#include <arpa/inet.h>
+#include <atomic>
 
-#include "channel.h"
-#include "eventloop.h"
-#include "timestamp.h"
-#include "acceptor.h"
-#include "eventloop_threadpool.h"
 #include "tcp_connection.h"
+#include "eventloop_threadpool.h"
+
+class EventLoop;
 
 class Acceptor; 
 

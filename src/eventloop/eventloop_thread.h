@@ -1,10 +1,12 @@
 #pragma once 
 
 #include <mutex>
+#include <atomic>
 #include <condition_variable>
 
 #include "thread.h"
-#include "eventloop.h"
+
+class EventLoop;
 
 
 class EventLoopThread {

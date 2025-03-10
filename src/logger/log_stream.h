@@ -1,16 +1,10 @@
 #pragma once
 
-#include <algorithm>
-#include <limits>
 #include <string>
-#include <cstdio>
-#include <cassert>
-
-#include <string.h>
+#include <cstring>
 
 constexpr int kLargeBuffer = 4000 * 1000;  // 4MB
 constexpr int kSmallBuffer = 4000;         // 4KB
-
 
 // 固定大小的缓冲区类
 template <int SIZE>

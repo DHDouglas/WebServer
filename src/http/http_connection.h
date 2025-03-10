@@ -1,21 +1,13 @@
 #pragma once 
 
 #include <memory>
+#include <string>
+
+#include "tcp_connection.h"
 #include "buffer.h"
+#include "timer.h"
 #include "http_message.h"
 #include "http_parser.h"
-#include "logger.h"
-#include "tcp_connection.h"
-#include "timer.h"
-#include "eventloop.h"
-
-#include <cerrno>
-#include <cstddef>
-#include <fcntl.h>
-#include <linux/limits.h>    // for PATH_MAX
-#include <sys/mman.h>
-#include <sys/stat.h>
-
 
 class HttpConnection {
 public:

@@ -2,9 +2,6 @@
 
 #include <vector>
 #include <string>
-#include <utility>
-#include <cassert>
-#include <sys/uio.h>
 
 /* muduo中buffer的简化实现.
  * 

@@ -1,5 +1,8 @@
 #pragma once 
 
+#include <functional>
+#include <cstring>
+
 #include "log_stream.h"
 #include "timestamp.h"
 

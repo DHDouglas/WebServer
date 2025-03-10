@@ -1,9 +1,8 @@
 #include "eventloop_thread.h"
-#include "channel.h"
-#include <mutex>
+
+#include "eventloop.h"
 
 using namespace std;
-
 
 EventLoopThread::EventLoopThread(const ThreadInitCallback& cb, const string& name)
     : loop_(nullptr),

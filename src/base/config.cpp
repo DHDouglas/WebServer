@@ -1,10 +1,10 @@
+#include "config.h"
+
 #include <getopt.h>
 #include <linux/limits.h>    // for PATH_MAX
 #include <iostream>
 #include <unistd.h>
 
-#include "config.h"
-#include "logger.h"
 #include "log_file.h"
 
 using namespace std;

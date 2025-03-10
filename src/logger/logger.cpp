@@ -1,4 +1,5 @@
 #include "logger.h"
+
 #include "thread.h"
 
 Logger::LogLevel g_log_level = Logger::INFO; 
@@ -35,6 +36,7 @@ thread_local char t_errnobuf[512];
 const char* strerror_tl(int saved_errno) {
     return strerror_r(saved_errno, t_errnobuf, sizeof t_errnobuf);
 }
+
 
 Logger::Logger(SourceFile file, int line)
     : impl_(INFO, 0, file, line) { }

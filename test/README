@@ -19,3 +19,5 @@
 - tcpconn_sent3_test
 - http_parser_unittest
 - http_parser_with_tcp_server_test
+- httpserver_demo_test
+- config_test

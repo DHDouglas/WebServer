@@ -10,7 +10,7 @@ PRESET="Debug"   # or "Release"
 show_help() {
     echo "Usage: $0 [option]"
     echo "Options:"
-    echo "  缺省            配置&构建"
+    echo "  缺省           根据该sh中的参数进行配置&构建"
     echo "  --preset       根据CMakePresets.json进行配置&构建"
     echo "  --clean        删除构建目录"
     echo "  --help         帮助信息"

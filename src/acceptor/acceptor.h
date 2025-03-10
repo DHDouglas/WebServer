@@ -1,17 +1,12 @@
 #pragma once
 
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <cstring>
-#include <string>
 #include <functional>
-#include <cstdio>
-#include <cstdlib>
+#include <atomic>
 
-#include "eventloop.h"
 #include "channel.h"
 #include "inet_address.h"
+
+class EventLoop;
 
 class Acceptor{ 
 public:

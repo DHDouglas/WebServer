@@ -1,5 +1,16 @@
 #include "http_connection.h"
+
+#include <unistd.h>
+#include <fcntl.h>
+#include <linux/limits.h>    // for PATH_MAX
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <cassert>
+
+#include "eventloop.h"
+#include "logger.h"
 #include "http_message.h"
+
 
 const unordered_map<HttpStatusCode, string> ERROR_RET_FILE_PATH = {
     { HttpStatusCode::BadRequest, "/400.html" },

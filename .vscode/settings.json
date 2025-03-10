@@ -4,7 +4,6 @@
         "-I${file}/../include",
         "-I${file}/../../include",
         "-I${workspaceFolder}/src/include",
-        // "-I${workspaceFolder}/buffer/SimpleExam/"
     ],
 
     "github.copilot.editor.enableAutoCompletions": false,

@@ -1,8 +1,9 @@
 #include <memory>
 #include <vector>
 
-#include "channel.h"
 #include "eventloop_thread.h"
+
+class EventLoop;
 
 class EventLoopThreadPool {
 public:

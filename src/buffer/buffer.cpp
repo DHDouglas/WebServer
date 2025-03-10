@@ -1,5 +1,7 @@
 #include "buffer.h"
 
+#include <sys/uio.h>
+#include <cassert>
 
 using namespace std; 
 

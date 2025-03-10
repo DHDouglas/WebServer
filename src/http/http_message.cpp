@@ -1,9 +1,12 @@
 #include "http_message.h"
+
+#include <cassert>
+#include <cstring>
+#include <functional>
+
 #include "logger.h"
 
-
 using namespace std;
-
 
 string getHttpStatusCodeString(HttpStatusCode code) {
     auto it =  STATUS_CODE_PHASE.find(code);

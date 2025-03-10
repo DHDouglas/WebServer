@@ -1,7 +1,8 @@
 #include "eventloop_threadpool.h"
-#include "channel.h"
-#include "eventloop_thread.h"
+
 #include <cassert>
+
+#include "eventloop.h"
 
 using namespace std;
 

@@ -1,15 +1,11 @@
 #include "http_server.h"
+
+#include <functional>
+
 #include "http_connection.h"
 #include "inet_address.h"
 #include "logger.h"
-#include "tcp_server.h"
-
-#include <fcntl.h>
-#include <functional>
-#include <sys/mman.h>
-#include <sys/stat.h>
 #include "timestamp.h"
-
 
 using namespace std;
 

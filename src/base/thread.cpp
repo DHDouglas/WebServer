@@ -1,5 +1,10 @@
 #include "thread.h"
 
+#include <cassert>
+#include <sys/prctl.h>   // for prctl(), 设置linux线程名. 
+#include <unistd.h>
+
+
 using namespace std;
 
 namespace CurrentThread {

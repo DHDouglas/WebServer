@@ -3,8 +3,6 @@
 #include <string>
 #include <logger.h>
 
-#include "inet_address.h"
-
 class Config {
 public:
     Config() = default;

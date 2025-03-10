@@ -1,14 +1,9 @@
 #pragma once
 
-#include <sys/epoll.h>
 #include <vector>
 #include <map>
-#include <cstdio>
-#include <cstdlib>
-#include <cassert>
 
 #include "channel.h"
-#include "logger.h"
 #include "timestamp.h"
 
 class EventLoop;

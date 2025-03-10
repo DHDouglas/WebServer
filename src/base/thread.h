@@ -1,17 +1,9 @@
 #pragma once
 
-#include <type_traits>
 #include <thread>
-#include <unistd.h>
 #include <functional>
 #include <string>
-#include <cstdio>
-#include <memory>
 #include <atomic>
-#include <exception>
-#include <sys/prctl.h>   // for prctl(), 设置linux线程名. 
-#include <cassert>
-
 
 #include "count_down_latch.h"
 
@@ -33,17 +25,11 @@ inline int getTid() {
     return t_cached_tid;  
 }
 
-inline const char* tidString() {
-    return t_tid_string;
-}
+inline const char* tidString() { return t_tid_string; }
 
-inline int tidStringLength() {
-    return t_tid_string_len; 
-}
+inline int tidStringLength() { return t_tid_string_len; }
 
-inline const char* name() {
-    return t_thread_name;
-}
+inline const char* name() { return t_thread_name; }
 
 }  // namespace CurrentThread
 

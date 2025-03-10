@@ -1,9 +1,7 @@
 #pragma once 
 
 #include <memory>
-#include <cassert>
 #include <functional>
-#include <vector>
 
 #include "channel.h"
 #include "timestamp.h"

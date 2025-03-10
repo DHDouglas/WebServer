@@ -1,5 +1,10 @@
 #include "log_stream.h"
-#include <type_traits>
+
+#include <algorithm>
+#include <cassert>
+#include <limits>
+#include <cstdio>
+#include <cstring>
 
 using namespace std;
 
@@ -37,6 +42,8 @@ size_t convertHex(char buf[], uintptr_t value)
   std::reverse(buf, p);
   return p - buf;
 }
+
+
 
 template <typename T>
 void LogStream::formatInteger(T v) {
