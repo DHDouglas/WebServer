@@ -31,5 +31,4 @@ private:
     Config config_;                // 配置项               
     std::unique_ptr<AsyncLogger> async_logger_;  
     TcpServer tcp_server_;
-    std::map<TcpConnectionPtr, HttpConnectionPtr> maps_; 
 };

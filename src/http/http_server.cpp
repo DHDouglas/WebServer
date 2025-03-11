@@ -6,6 +6,7 @@
 #include "inet_address.h"
 #include "logger.h"
 #include "timestamp.h"
+#include "any.h"
 
 using namespace std;
 
@@ -51,15 +52,16 @@ void HttpServer::start() {
 void HttpServer::onConnection(const TcpServer::TcpConnectionPtr& tcp_conn) {
     if (tcp_conn->connected()) {
         LOG_TRACE << "HttpServer::onConnection: new HttpConnection"; 
-        auto http_conn = make_shared<HttpConnection>(
+        // TcpConnection的context_以`shared_ptr`的形式绑定HttpConnection, 
+        // 旨在让HttpConnection的回调函数能通过weak_ptr<HttpConnection>的形式绑定而不是通过HttpConnection::this, 
+        // 防止TcpConnection析构后HttpConnection也失效, 回调实际执行时触发段错误.
+        tcp_conn->setContext(make_shared<HttpConnection>(
             tcp_conn, 
             config_.root_path_, 
             Timestamp::secondsToDuration(config_.timeout_seconds_)
-        ); 
-        maps_[tcp_conn] = http_conn;
+        ));
     } else {
-        maps_.erase(tcp_conn); 
-        LOG_TRACE << "HttpServer::onConnection: remove tcp_conn, remainder: " << maps_.size(); 
+        LOG_TRACE << "HttpServer::onConnection: remove tcp_conn";
     }
 }
 
@@ -69,8 +71,9 @@ void HttpServer::onMessage(const TcpServer::TcpConnectionPtr& tcp_conn,
                            Timestamp receive_time)
 {
     LOG_TRACE << "HttpServer::onMessage receive_time: " << receive_time.toFormattedString().c_str(); 
-    auto http_conn = maps_[tcp_conn]; 
-    http_conn->handleMessage(buf);
+    auto http_conn = any_cast<shared_ptr<HttpConnection>>(tcp_conn->getMutableContext());
+    assert(http_conn);
+    (*http_conn)->handleMessage(buf);
 }
 
 

@@ -37,22 +37,27 @@ HttpConnection::HttpConnection(std::weak_ptr<TcpConnection> tcp_conn,
     auto conn_sptr = tcp_conn_wkptr.lock(); 
     if (conn_sptr) {
         LOG_TRACE << "HttpConnection: add Timer";
-        timer_wkptr_ = conn_sptr->getOwnerLoop()->runAfter(
-        timeout_duration_, bind(&HttpConnection::forceClose, this));
+        // timer_wkptr_ = conn_sptr->getOwnerLoop()->runAfter(
+        //     timeout_duration_, 
+        //     makeWeakCallback(shared_from_this(), &HttpConnection::forceClose));
     }
 }
 
+HttpConnection::~HttpConnection() {
+    LOG_DEBUG << "HttpConnection::~HttpConnection this::" <<  this 
+              << " tcp_conn_wkptr use count: " << tcp_conn_wkptr.use_count();
+}
 
 void HttpConnection::restartTimer() {
-    auto conn_sptr = tcp_conn_wkptr.lock(); 
-    auto timer_sptr = timer_wkptr_.lock();
-    // conn或timer不存在, 均意味着TCP连接已断开. timer的定时任务即为forceClose掉Tcp连接.
-    if (conn_sptr && timer_sptr) {
-        LOG_TRACE << "HttpConnection::restartTimer";
-        conn_sptr->getOwnerLoop()->removeTimer(timer_wkptr_); 
-        timer_wkptr_ = conn_sptr->getOwnerLoop()->runAfter(
-            timeout_duration_, bind(&HttpConnection::forceClose, this));
-    }
+    // auto conn_sptr = tcp_conn_wkptr.lock(); 
+    // auto timer_sptr = timer_wkptr_.lock();
+    // // conn或timer不存在, 均意味着TCP连接已断开. timer的定时任务即为forceClose掉Tcp连接.
+    // if (conn_sptr && timer_sptr) {
+    //     LOG_TRACE << "HttpConnection::restartTimer";
+    //     conn_sptr->getOwnerLoop()->removeTimer(timer_sptr); 
+    //     timer_wkptr_ = conn_sptr->getOwnerLoop()->runAfter(
+    //         timeout_duration_, bind(&HttpConnection::forceClose, this));
+    // }
 }
 
 void HttpConnection::shutdown() const {
@@ -63,13 +68,24 @@ void HttpConnection::shutdown() const {
 }
 
 void HttpConnection::forceClose() const {
+    LOG_TRACE << "HttpConnection::forceClose(): this:  " << this;
     auto conn_sptr = tcp_conn_wkptr.lock(); 
-    auto timer_sptr = timer_wkptr_.lock();
-    if (conn_sptr && timer_sptr) {
+    // auto timer_sptr = timer_wkptr_.lock();
+    if (conn_sptr) {
         // 清除定时器, 关闭tcp连接. 
+        LOG_TRACE << "HttpConnection::forceClose(): conn_sptr.use_count: " << conn_sptr.use_count();
+        LOG_TRACE << "HttpConnection::forceClose(): conn_sptr.get " << conn_sptr.get();
+        cerr << "HttpConnection::forceClose(): this:  " << this;
+        cerr << "HttpConnection::forceClose(): conn_sptr.use_count: " << conn_sptr.use_count() << endl;
+        cerr << "HttpConnection::forceClose(): conn_sptr.get " << conn_sptr.get();
         conn_sptr->getOwnerLoop()->removeTimer(timer_wkptr_); 
         conn_sptr->forceClose(); 
     }
+    // auto conn_sptr = tcp_conn_wkptr.lock(); 
+    // if (conn_sptr) {
+    //     // 清除定时器, 关闭tcp连接. 
+    //     conn_sptr->forceClose(); 
+    // }
 }
 
 
@@ -89,8 +105,6 @@ void HttpConnection::handleMessage(Buffer* buf) {
     } else if (ret == R::ERROR) {
         LOG_WARN << "HttpServer::onMessage http request parsing error"; 
         sendErrorResponse(HttpStatusCode::BadRequest);
-        // tcp_conn->send("HTTP/1.1 400 Bad Request\r\n\r\n");
-        // tcp_conn->shutdown();
     } else {
         LOG_TRACE << "HttpServer::onMessage http request parsing continue"; 
     }

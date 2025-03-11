@@ -17,6 +17,7 @@ public:
                    std::string root_path_, 
                    Duration timeout_duration);
 
+    ~HttpConnection();
     // 处理&解析HTTP请求报文
     void handleMessage(Buffer* buf);
 

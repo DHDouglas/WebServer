@@ -71,6 +71,8 @@ target_link_libraries(httpserver_demo_test PRIVATE MyObjects)
 add_executable(config_test config_test.cpp)
 target_link_libraries(config_test PRIVATE MyObjects)
 
+add_executable(any_class_test any_class_test.cpp)
+target_link_libraries(any_class_test PRIVATE MyObjects)
 
 add_custom_target(all_test_exec DEPENDS
     eventloop1_test
@@ -95,4 +97,5 @@ add_custom_target(all_test_exec DEPENDS
     http_parser_with_tcp_server_test
     httpserver_demo_test
     config_test
+    any_class_test
 )

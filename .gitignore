@@ -5,3 +5,4 @@ out/
 bin/
 log/
 .cache
+core.*

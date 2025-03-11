@@ -81,7 +81,9 @@ void TcpServer::removeConnectionInLoop(const TcpConnectionPtr& conn) {
     loop_->assertInLoopThread();
     string conn_name = conn->getName();
     LOG_INFO << "TcpServer::removeConnectionInLoop [" << name_
-             << "] - connection " << conn_name;
+             << "] - connection " << conn_name 
+             << " remainer: " << connections_.size()
+             << " conn_sptr use_count: " << conn.use_count();
 
     size_t n = connections_.erase(conn_name);
     assert(n == 1); 

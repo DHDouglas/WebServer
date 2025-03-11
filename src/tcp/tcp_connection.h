@@ -7,6 +7,7 @@
 #include "timestamp.h"
 #include "inet_address.h"
 #include "buffer.h"
+#include "any.h"
 
 
 class EventLoop; 
@@ -57,6 +58,8 @@ public:
     void shutdown(); // 调用shutdownInLoop, 后者保证在EventLoop所属的IO线程调用
     void forceClose(); 
 
+    void setContext(const Any& context) { context_ = context; }
+    Any* getMutableContext() { return &context_; }
 
 private:
     // - kConnecting: 调用connectionEstablished()之前
@@ -81,10 +84,10 @@ private:
     std::string name_; 
     State state_; 
     bool reading_; 
-    // int sockfd_;
     Channel channel_; 
     InetAddress local_addr_;
     InetAddress peer_addr_; 
+    Any context_;
 
     ConnectionCallback connCallback_;  
     MessageCallback msgCallback_;
