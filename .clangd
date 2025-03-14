@@ -1,5 +1,5 @@
 CompileFlags:
-  Add: [-std=c++17, -Wall, -Wextra, -Werror]
+  Add: [-std=c++14, -Wall, -Wextra, -Werror]
 
 InlayHints:
   Enabled: No

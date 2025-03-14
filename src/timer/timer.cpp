@@ -1,6 +1,7 @@
 #include "timer.h"
 
 #include <unistd.h>
+#include <sys/timerfd.h>
 #include <iterator>
 #include <cassert>
 
@@ -84,7 +85,7 @@ void TimerManager::handleExpiredTimer() {
     timers_.erase(timers_.begin(), it); 
 
     // 4.处理每个到期的定时器: 执行回调
-    LOG_TRACE << "TTimerManager::handleExpiredTimer cnt:" << expired.size();
+    LOG_TRACE << "TimerManager::handleExpiredTimer cnt:" << expired.size();
     calling_expired_timers_ = true;
     canceling_timers_.clear(); 
     for (const auto& p : expired) {

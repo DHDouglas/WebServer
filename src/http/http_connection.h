@@ -28,8 +28,12 @@ private:
     // 处理url路径, 若有效且目标文件存在&可访问, 则path设置为文件的绝对路径.
     HttpStatusCode processPath(string& path);
 
+    // 定时器回调.
+    void static handleTimer(const std::weak_ptr<TcpConnection>& wk_ptr);
     // 重置定时器
     void restartTimer(); 
+    void removeTimer();
+
     // 仅关闭写端. 
     void shutdown() const;
     // 断开连接

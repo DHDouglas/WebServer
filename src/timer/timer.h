@@ -1,14 +1,10 @@
 #pragma once
 
-#include <sys/timerfd.h>
 #include <functional>
 #include <utility>
 #include <set>
 #include <memory>
 #include <atomic>
-#include <string.h>
-#include <cstdio>
-#include <iostream>
 
 #include "channel.h"
 #include "timestamp.h"

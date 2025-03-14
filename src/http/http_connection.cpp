@@ -34,58 +34,56 @@ HttpConnection::HttpConnection(std::weak_ptr<TcpConnection> tcp_conn,
     root_path_(root_path_),
     tcp_conn_wkptr(tcp_conn)
 {
-    auto conn_sptr = tcp_conn_wkptr.lock(); 
-    if (conn_sptr) {
-        LOG_TRACE << "HttpConnection: add Timer";
-        // timer_wkptr_ = conn_sptr->getOwnerLoop()->runAfter(
-        //     timeout_duration_, 
-        //     makeWeakCallback(shared_from_this(), &HttpConnection::forceClose));
+    if (auto conn_sptr = tcp_conn_wkptr.lock()) {
+        timer_wkptr_ = conn_sptr->getOwnerLoop()->runAfter(
+            timeout_duration_, bind(&HttpConnection::handleTimer, tcp_conn_wkptr));
+    } 
+}
+
+void HttpConnection::handleTimer(const std::weak_ptr<TcpConnection>& conn_wkptr) {
+    if (auto conn_sptr = conn_wkptr.lock()) {
+        LOG_DEBUG << "HttpConnection::forceCloseTest execude";
+        conn_sptr->forceClose(); 
+    } else {
+        LOG_DEBUG << "HttpConnection::forceCloseTest missed"; 
     }
 }
 
+
 HttpConnection::~HttpConnection() {
+    removeTimer();
     LOG_DEBUG << "HttpConnection::~HttpConnection this::" <<  this 
               << " tcp_conn_wkptr use count: " << tcp_conn_wkptr.use_count();
 }
 
 void HttpConnection::restartTimer() {
-    // auto conn_sptr = tcp_conn_wkptr.lock(); 
-    // auto timer_sptr = timer_wkptr_.lock();
-    // // conn或timer不存在, 均意味着TCP连接已断开. timer的定时任务即为forceClose掉Tcp连接.
-    // if (conn_sptr && timer_sptr) {
-    //     LOG_TRACE << "HttpConnection::restartTimer";
-    //     conn_sptr->getOwnerLoop()->removeTimer(timer_sptr); 
-    //     timer_wkptr_ = conn_sptr->getOwnerLoop()->runAfter(
-    //         timeout_duration_, bind(&HttpConnection::forceClose, this));
-    // }
+    if (auto conn_sptr = tcp_conn_wkptr.lock()) {
+        conn_sptr->getOwnerLoop()->removeTimer(timer_wkptr_); 
+        timer_wkptr_ = conn_sptr->getOwnerLoop()->runAfter(
+            timeout_duration_, bind(&HttpConnection::handleTimer, tcp_conn_wkptr));
+    } 
 }
 
 void HttpConnection::shutdown() const {
-    auto conn_sptr = tcp_conn_wkptr.lock(); 
-    if (conn_sptr) {
-        conn_sptr->shutdown(); 
+    if (auto conn_sptr = tcp_conn_wkptr.lock()) {
+        conn_sptr->forceClose(); 
     }
 }
 
 void HttpConnection::forceClose() const {
     LOG_TRACE << "HttpConnection::forceClose(): this:  " << this;
-    auto conn_sptr = tcp_conn_wkptr.lock(); 
-    // auto timer_sptr = timer_wkptr_.lock();
-    if (conn_sptr) {
+    if (auto conn_sptr = tcp_conn_wkptr.lock()) {
+        conn_sptr->forceClose(); 
+    }
+}
+
+void HttpConnection::removeTimer() {
+    if (auto conn_sptr = tcp_conn_wkptr.lock()) {
         // 清除定时器, 关闭tcp连接. 
         LOG_TRACE << "HttpConnection::forceClose(): conn_sptr.use_count: " << conn_sptr.use_count();
         LOG_TRACE << "HttpConnection::forceClose(): conn_sptr.get " << conn_sptr.get();
-        cerr << "HttpConnection::forceClose(): this:  " << this;
-        cerr << "HttpConnection::forceClose(): conn_sptr.use_count: " << conn_sptr.use_count() << endl;
-        cerr << "HttpConnection::forceClose(): conn_sptr.get " << conn_sptr.get();
         conn_sptr->getOwnerLoop()->removeTimer(timer_wkptr_); 
-        conn_sptr->forceClose(); 
     }
-    // auto conn_sptr = tcp_conn_wkptr.lock(); 
-    // if (conn_sptr) {
-    //     // 清除定时器, 关闭tcp连接. 
-    //     conn_sptr->forceClose(); 
-    // }
 }
 
 

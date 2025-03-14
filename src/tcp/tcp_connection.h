@@ -12,7 +12,7 @@
 
 class EventLoop; 
 
-class TcpConnection : public std::enable_shared_from_this<TcpConnection>{
+class TcpConnection : public std::enable_shared_from_this<TcpConnection> {
 public:
     using ConnectionCallback = std::function<void(const std::shared_ptr<TcpConnection>&)>;
     using CloseCallback = ConnectionCallback;

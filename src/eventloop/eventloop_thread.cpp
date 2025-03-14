@@ -2,6 +2,8 @@
 
 #include "eventloop.h"
 
+#include "logger.h"
+
 using namespace std;
 
 EventLoopThread::EventLoopThread(const ThreadInitCallback& cb, const string& name)
@@ -17,6 +19,7 @@ EventLoopThread::~EventLoopThread() {
         // but when EventLoopThread destructs, usually programming is exiting anyway.
         // => 有可能进入这里时, loop_已经为空了, 例如threadFunc()已执行完成.
         // FIXME: 加锁也没用. EventLoop生命周期不受EventLoopThread管理. 例如
+        LOG_DEBUG << "EventLoopThread::~EventLoopThread() loop_->quit(): " << loop_;
         loop_->quit();
         thread_.join(); 
     }
@@ -41,7 +44,7 @@ void EventLoopThread::threadFunc() {
     }
 
     {
-        unique_lock<mutex> lock(mtx_);
+        lock_guard<mutex> lock(mtx_);
         loop_ = &loop; 
         cond_.notify_one(); 
     }

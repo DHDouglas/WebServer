@@ -33,8 +33,8 @@ target_link_libraries(http_server PRIVATE MyObjects)
 #     RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}   # 单独输出到bin.
 # )
 
-# 为所有头文件在src/include/目录下创建符号链接. 
-set(LINK_DIR "${SRC_DIR}/include")
+# 为所有头文件在include/目录下创建符号链接. 
+set(LINK_DIR "${PROJECT_SOURCE_DIR}/include")
 file(MAKE_DIRECTORY ${LINK_DIR})
 set(SYMLINKS "")
 foreach(INC_DIR ${INCLUDE_DIRS})

@@ -73,32 +73,6 @@ Thread::~Thread() {
 }
 
 
-// Thread::Thread(Thread&& rhs) noexcept
-//     : started_(rhs.started_),
-//       thread_(std::move(rhs.thread_)),
-//       tid_(rhs.tid_),
-//       func_(std::move(rhs.func_)),
-//       name_(std::move(rhs.name_)),
-//       latch_(std::move(latch_))
-// {
-// }
-
-// Thread& Thread::operator=(Thread&& rhs) noexcept
-// {
-//     if (this != &rhs) {
-//         if (thread_.joinable()) {
-//             thread_.detach();  // 
-//         }
-//         started_ = rhs.started_; 
-//         thread_ = std::move(rhs.thread_); 
-//         tid_ = rhs.tid_;  
-//         func_ = std::move(rhs.func_);
-//         name_ = std::move(rhs.name_);
-//     }
-//     return *this;
-// }
-
-
 void Thread::threadFunc() {
     tid_ = CurrentThread::getTid(); 
     latch_.countDown();  

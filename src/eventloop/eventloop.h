@@ -30,7 +30,6 @@ public:
 
     bool hasChannel(Channel* channel);
     void updateChannelInEpoller(Channel* channel);
-    void modInEpoller(Channel* channel); 
     void removeChannelFromEpoller(Channel* channel); 
 
     std::weak_ptr<Timer> runAt(const Timestamp& time, const TimerCallback& cb);
