@@ -2,7 +2,6 @@
 
 #include <cassert>
 #include <cstring>
-#include <functional>
 
 #include "logger.h"
 
@@ -79,7 +78,7 @@ int HttpMessage::encode(struct iovec vectors[], int max) const{
     for (auto& t : headers_) {
         if (i + 4 > max) {
             errno = EOVERFLOW;  
-            return false; 
+            return -1; 
         }
         vectors[i].iov_base = (void*)t.first.data();   // name
         vectors[i].iov_len = t.first.length(); 
@@ -97,7 +96,7 @@ int HttpMessage::encode(struct iovec vectors[], int max) const{
 
     if (i + 2 > max) {
         errno = EOVERFLOW; 
-        return false; 
+        return -1; 
     }
     vectors[i].iov_base = (void*)"\r\n";
     vectors[i].iov_len = 2; 
@@ -106,12 +105,13 @@ int HttpMessage::encode(struct iovec vectors[], int max) const{
     if (body_ && body_size_ > 0) {
         if (i == max) {
             errno = EOVERFLOW;
-            return false; 
+            return -1; 
         }
         vectors[i].iov_base = (void*)body_; 
         vectors[i].iov_len = body_size_;   
+        ++i;
     }
-    return i + 1; 
+    return i; 
 }
 
 void HttpMessage::encode(Buffer* buf) const {

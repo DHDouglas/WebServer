@@ -53,6 +53,8 @@ public:
     void send(const void* message, size_t len); 
     void send(const std::string& message); 
     void send(Buffer* message);
+    void send(struct iovec vecs[], size_t iovcnt);
+
 
     // 半关闭, 仅关闭写端
     void shutdown(); // 调用shutdownInLoop, 后者保证在EventLoop所属的IO线程调用
@@ -75,8 +77,14 @@ private:
     void handleError(); 
 
     void sendInLoop(const void* message, size_t len); 
+    void sendInLoop(struct iovec vecs[], size_t iovcnt);
     void shutdownInLoop();  
     void forceCloseInLoop();
+    
+    // 以vector<char>形式拷贝数据副本.
+    std::vector<char> persistData(const void* data, size_t len);
+    std::vector<char> persistData(struct iovec vecs[], size_t iovcnt);
+
 
 
 private:

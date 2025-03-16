@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <unistd.h>
 #include <cassert>
+#include <sys/uio.h>
 
 #include "eventloop.h"
 #include "logger.h"
@@ -208,7 +209,6 @@ void TcpConnection::send(Buffer* buf) {
 
 // const char*可以隐式转换为const void*, 无需单独重载. 
 void TcpConnection::send(const void* data, size_t len) {
-    // send(string(static_cast<const char*>(data), len)); 
     if (state_ == State::kConnected) {
         if (loop_->isInLoopThread()) {
             sendInLoop(data, len); 
@@ -216,10 +216,7 @@ void TcpConnection::send(const void* data, size_t len) {
             // 当前线程非所属EventLoop所在的IO线程, 故需作为PendingFunctor添加到后者的任务队列中. 
             // 由于不是立即执行, 因此必须赋值一份data, 避免在Loop中真正运行该函数时外部data指针已失效. 
             // 用vector<char>而不是string, 保证传输二进制数据, 不因为'\0'而截断.
-            auto message = vector<char>(
-                static_cast<const char*>(data), 
-                static_cast<const char*>(data) + len
-            );
+            auto message = persistData(data, len); 
             loop_->runInLoop(
                 [this, msg = std::move(message)]() { // 移动捕获. 
                     this->sendInLoop(msg.data(), msg.size());
@@ -245,15 +242,15 @@ void TcpConnection::sendInLoop(const void* data, size_t len) {
     if (!channel_.isWriting() && output_buffer_.readableBytes() == 0) {
         n_written = ::write(channel_.getFd(), data, len); 
         if (n_written >= 0) {
-            remaining = len - n_written; 
+            remaining -= n_written; 
             if (remaining == 0 && writeCompleteCallback_) { // 已全写完, 执行用户回调.
                 loop_->addToQueueInLoop(bind(writeCompleteCallback_, shared_from_this())); 
             }
         } else {
             n_written = 0;
-            if (errno != EWOULDBLOCK) {
+            if (errno != EWOULDBLOCK) {  // 非缓冲区已满
                 LOG_SYSERR << "TcpConnection::sendInLoop";
-                if (errno == EPIPE || errno == ECONNRESET) {
+                if (errno == EPIPE || errno == ECONNRESET) {  // 连接异常
                     fault_error = true; 
                 }
             }
@@ -269,4 +266,112 @@ void TcpConnection::sendInLoop(const void* data, size_t len) {
             channel_.enableWriting();  // epoll上开启监听EPOLLOUT.
         }
     }
+}
+
+
+void TcpConnection::send(struct iovec vecs[], size_t iovcnt) {
+    if (state_ == State::kConnected) {
+        if (loop_->isInLoopThread()) {
+            sendInLoop(vecs, iovcnt); 
+        } else {
+            // 当前线程非所属EventLoop所在的IO线程, 故需作为PendingFunctor添加到后者的任务队列中. 
+            // 由于不是立即执行, 因此必须赋值一份data, 避免在Loop中真正运行该函数时外部data指针已失效. 
+            // 用vector<char>而不是string, 保证传输二进制数据, 不因为'\0'而截断.
+            auto message = persistData(vecs, iovcnt); 
+            loop_->runInLoop(
+                [this, msg = std::move(message)]() { // 移动捕获. 
+                    this->sendInLoop(msg.data(), msg.size());
+                }
+            );  
+        }
+    }
+}
+
+
+void TcpConnection::sendInLoop(struct iovec vecs[], size_t iovcnt) {
+    ssize_t n_written = 0;
+    size_t total = 0;
+    for (size_t i = 0; i < iovcnt; ++i) {
+        total += vecs[i].iov_len;
+    }
+    size_t remaining = total; 
+
+    bool fault_error = false;
+    if (state_ == State::kDisconnected) {
+        LOG_WARN << "disconnected, give up writing";
+        return;
+    }
+    if (!channel_.isWriting() && output_buffer_.readableBytes() == 0) {
+        n_written = ::writev(channel_.getFd(), vecs, iovcnt); 
+        if (n_written >= 0) {
+            remaining -= n_written;
+            if (remaining == 0 && writeCompleteCallback_) { // 已全写完, 执行用户回调.
+                loop_->addToQueueInLoop(bind(writeCompleteCallback_, shared_from_this())); 
+            }
+        } else {
+            n_written = 0; 
+            if (errno != EWOULDBLOCK) {
+                LOG_SYSERR << "TcpConnection::sendInLoop writev";
+                if (errno == EPIPE || errno == ECONNRESET) {
+                    fault_error = true; 
+                }
+            }
+        }
+    }
+    LOG_TRACE << "TcpConnection::send send " << n_written 
+              << " bytes, remaining: " << remaining; 
+    assert(remaining <= total); 
+    // 对剩余数据写入发送缓冲区.
+    if (!fault_error && remaining > 0) {
+        size_t n = n_written; 
+        size_t i = 0; 
+        vector<iovec> rest;
+        for (; i < iovcnt; ++i) {
+            if (n >= vecs[i].iov_len) {
+                n -= vecs[i].iov_len;
+            } else {
+                struct iovec vec;
+                vec.iov_base = static_cast<char*>(vecs[i].iov_base) + n;
+                vec.iov_len = vecs[i].iov_len - n;
+                rest.push_back(std::move(vec));
+                ++i;
+                break;
+            }
+        }
+        for (; i < iovcnt; ++i) {
+            rest.push_back(vecs[i]);
+        }
+        output_buffer_.append(rest.data(), rest.size());
+        if (!channel_.isWriting()) {
+            channel_.enableWriting();  
+        }
+    }
+}
+
+
+vector<char> TcpConnection::persistData(const void* data, size_t len) {
+    return vector<char>(
+        static_cast<const char*>(data), 
+        static_cast<const char*>(data) + len
+    );
+}
+
+vector<char> TcpConnection::persistData(struct iovec vectors[], size_t iovcnt) {
+    size_t total = 0;
+    for (size_t i = 0; i < iovcnt; ++i) {
+        total += vectors[i].iov_len;
+    }
+    vector<char> data(total);
+    // char* dst = data.data(); 
+    for (size_t i = 0; i < iovcnt; ++i) {
+        // memcpy(dst, vectors[i].iov_base, vectors[i].iov_len);
+        // dst += vectors[i].iov_len;
+        data.insert(
+            data.end(), 
+            static_cast<const char*>(vectors[i].iov_base), 
+            static_cast<const char*>(vectors[i].iov_base) + vectors[i].iov_len
+        );
+
+    };
+    return data;
 }

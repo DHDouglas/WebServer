@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include <sys/uio.h>
 
 /* muduo中buffer的简化实现.
  * 
@@ -29,6 +30,7 @@
  *  0      <=      readerIndex   <=   writerIndex    <=     size
  *  @endcode
  */
+
 
 class Buffer {
 public:
@@ -58,6 +60,7 @@ public:
     void append(const char* str, size_t len);   // 基础版本.
     void append(const std::string& str);
     void append(const void* data, size_t len);  
+    void append(struct iovec vector[], size_t iovcnt); 
 
     ssize_t readFd(int fd, int* save_errno);     // 从fd中读取到缓冲区
     // ssize_t WriteFd(int fd, int* save_errno);    // 向fd中写入缓冲区内容. 

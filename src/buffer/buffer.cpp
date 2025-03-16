@@ -1,6 +1,6 @@
 #include "buffer.h"
 
-#include <sys/uio.h>
+#include <bits/types/struct_iovec.h>
 #include <cassert>
 
 using namespace std; 
@@ -106,6 +106,13 @@ void Buffer::append(const std::string& str) {
 void Buffer::append(const void* data, size_t len) {
     assert(data); 
     append(static_cast<const char*>(data), len); 
+}
+
+void Buffer::append(struct iovec vectors[], size_t iovcnt) {
+    assert(vectors);
+    for (size_t i = 0; i < iovcnt; ++i) {
+        append(vectors[i].iov_base, vectors[i].iov_len); 
+    }
 }
 
 void Buffer::hasWritten(size_t len) {

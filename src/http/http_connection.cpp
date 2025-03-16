@@ -1,5 +1,7 @@
 #include "http_connection.h"
 
+#include <bits/types/struct_iovec.h>
+#include <climits>
 #include <unistd.h>
 #include <fcntl.h>
 #include <linux/limits.h>    // for PATH_MAX
@@ -170,13 +172,14 @@ void HttpConnection::sendErrorResponse(const HttpStatusCode& code) {
 }
 
 
-
 void HttpConnection::sendResponse(const HttpResponse& response) {
-    // 临时用栈空间作为Http的应用层缓冲区, 只存放请求行+头部.
     if (auto tcp_conn_sptr = tcp_conn_wkptr.lock()) {
-        Buffer buf;  
-        response.encode(&buf); 
-        tcp_conn_sptr->send(&buf);
+        // Buffer buf;  
+        // response.encode(&buf); 
+        // tcp_conn_sptr->send(&buf);
+        struct iovec vecs[IOV_MAX]; 
+        size_t iovcnt = response.encode(vecs, IOV_MAX);
+        tcp_conn_sptr->send(vecs, iovcnt);
     }
     // 短连接下, 服务器端回发响应报文后关闭写端.
     if (!parser_.getKeepAlive()) {
