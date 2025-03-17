@@ -12,7 +12,10 @@ enum class HttpMethod {
     GET = 0,
     HEAD,
     POST,
+    UNKNOWN
 }; 
+
+HttpMethod getHttpMethodAsEnum(const std::string& method); 
 
 enum class HttpStatusCode {
     Continue = 100,  
@@ -21,20 +24,41 @@ enum class HttpStatusCode {
     Forbidden = 403, 
     NotFound = 404, 
     InternalServerError = 500,
+    NotImplemented = 501
 }; 
-
 
 const std::unordered_map<HttpStatusCode, std::pair<std::string, std::string>> 
 STATUS_CODE_PHASE {
     {HttpStatusCode::Continue,    {"100", "Continue"}},
     {HttpStatusCode::OK,          {"200", "OK"}}, 
-    {HttpStatusCode::BadRequest,  {"400", "BadRequest"}},
+    {HttpStatusCode::BadRequest,  {"400", "Bad Request"}},
     {HttpStatusCode::Forbidden,   {"403", "Forbidden"}},
-    {HttpStatusCode::NotFound,    {"404", "NotFound"}},
-    {HttpStatusCode::InternalServerError,  {"500", "InternalServerError"}},
+    {HttpStatusCode::NotFound,    {"404", "Not Found"}},
+    {HttpStatusCode::InternalServerError,  {"500", "Internal Server Error"}},
+    {HttpStatusCode::NotImplemented, {"501", "Not Implemented"}}
 }; 
 
 std::string getHttpStatusCodeString(HttpStatusCode code);
+
+
+const std::unordered_map<std::string, std::string> CONTENT_TYPE = {
+    { ".html",  "text/html" },
+    { ".txt",   "text/plain" },
+    { ".css",   "text/css "},
+    { ".js",    "text/javascript"},
+    { ".xml",   "text/xml" },
+    { ".png",   "image/png" },
+    { ".gif",   "image/gif" },
+    { ".jpg",   "image/jpeg" },
+    { ".jpeg",  "image/jpeg" },
+    { ".mpeg",  "video/mpeg" },
+    { ".mpg",   "video/mpeg" },
+    { ".avi",   "video/x-msvideo" },
+    { ".gz",    "application/x-gzip" },
+    { ".tar",   "application/x-tar" },
+};
+
+std::string getContentType(const std::string& path); 
 
 
 class HttpMessage {

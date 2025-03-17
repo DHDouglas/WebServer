@@ -27,7 +27,7 @@ public:
     const Headers& getHeaders() const ; 
     const char* getBody() const ; 
     size_t getBodySize() const;
-    bool getKeepAlive() const; 
+    bool isKeepAlive() const; 
 
     bool parsingCompletion(); 
 

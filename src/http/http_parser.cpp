@@ -374,6 +374,6 @@ const vector<pair<string, string>>& HttpParser::getHeaders() const {
     return headers; 
 }
 
-bool HttpParser::getKeepAlive() const {
+bool HttpParser::isKeepAlive() const {
     return keep_alive; 
 }

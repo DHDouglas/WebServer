@@ -22,16 +22,16 @@ public:
     void handleMessage(Buffer* buf);
 
 private:
-    // 业务逻辑 
+    // 根据URL执行不同业务逻辑 
     void handleRequest();
-    
-    // 处理url路径, 若有效且目标文件存在&可访问, 则path设置为文件的绝对路径.
-    HttpStatusCode processPath(string& path);
+    // 请求静态资源
+    void response(const string& path);  
 
     // 定时器回调.
     void static handleTimer(const std::weak_ptr<TcpConnection>& wk_ptr);
     // 重置定时器
     void restartTimer(); 
+    // 移除定时器
     void removeTimer();
 
     // 仅关闭写端. 
@@ -39,7 +39,7 @@ private:
     // 断开连接
     void forceClose() const;
 
-    void sendErrorResponse(const HttpStatusCode& code);
+    void errorResponse(HttpStatusCode code);
     void sendResponse(const HttpResponse& response);     // base.
 
 private:

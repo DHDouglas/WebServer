@@ -52,6 +52,7 @@ void Config::parseArgs(int argc, char* argv[]) {
         }
     }
     root_path_ = ensureAbsoluteRootPath(root_path_);
+    if (root_path_.back() == '/') root_path_.pop_back(); 
     // LogFile::ensureDirExists(log_dir_); 
     // log_dir_ = ensureAbsoluteRootPath(log_dir_);
 }

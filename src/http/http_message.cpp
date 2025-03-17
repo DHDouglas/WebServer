@@ -2,10 +2,23 @@
 
 #include <cassert>
 #include <cstring>
+#include <strings.h>
 
 #include "logger.h"
 
 using namespace std;
+
+
+HttpMethod getHttpMethodAsEnum(const std::string &method) {
+    if (strncasecmp(method.c_str(), "HEAD", 4) == 0) {
+        return HttpMethod::HEAD;
+    } else if (strncasecmp(method.c_str(), "GET", 3) == 0) {
+        return HttpMethod::GET;
+    } else if (strncasecmp(method.c_str(), "POST", 4) == 0) {
+        return HttpMethod::POST;
+    }
+    return HttpMethod::UNKNOWN;
+}
 
 string getHttpStatusCodeString(HttpStatusCode code) {
     auto it =  STATUS_CODE_PHASE.find(code);
@@ -13,6 +26,19 @@ string getHttpStatusCodeString(HttpStatusCode code) {
         return ""; 
     }
     return it->second.first; 
+}
+
+string getContentType(const std::string& path) {
+    string::size_type pos = path.find_last_of('.'); 
+    if (pos == string::npos) {
+        return "text/plain";
+    }
+    string suffix = path.substr(pos);
+    auto it = CONTENT_TYPE.find(suffix); 
+    if (it != CONTENT_TYPE.end()) {
+        return it->second;
+    }
+    return "text/plain";
 }
 
 bool HttpMessage::setVersion(const string str) {

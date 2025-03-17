@@ -4,13 +4,13 @@ PROGRAM="./build/Debug/bin/http_server"
 
 IP=""                        # 监听地址. 为空时监听所有地址.
 PORT=80                      # 监听端口.
-THREAD_NUM=5                 # IO线程数量. 即subReactor数量, 为0则主线程兼做IO线程.
+THREAD_NUM=3                 # IO线程数量. 即subReactor数量, 为0则主线程兼做IO线程.
 ROOT_PATH="./resources"      # Web资源文件根路径.
 TIMEOUT=30                   # HttpConnection 超时时间.(为0时表示不启用定时器)
 LOG_ENABLE=1                 # 是否开启日志输出. 1开启, 0关闭.
 LOG_FNAME="HttpServerLog"    # 日志文件名(为空时将输出到stdout)
 LOG_DIR="./log"              # 日志目录
-LOG_LEVEL=5                  # 日志级别. 0:TRACE, 1:DEBUG, 2:INFO, 3:WARN, 4:ERROR, 5:FATAL.
+LOG_LEVEL=2                  # 日志级别. 0:TRACE, 1:DEBUG, 2:INFO, 3:WARN, 4:ERROR, 5:FATAL.
 LOG_ROLLSIZE=500000000       # 单份日志文件字节上限(写满后切换新文件). 0.5GB.
 LOG_FLUSH_TIME=2             # 从buffer定期刷入日志文件的间隔秒数. 2秒.
 
@@ -32,7 +32,13 @@ if (( LOG_ENABLE )); then
     ARGS+=("-u" "$LOG_FLUSH_TIME")
 fi
 
-exec $PROGRAM "${ARGS[@]}" 
+
+if [[ "$1" == "--gdb" ]]; then
+    shift   # 移除 --gdb 参数
+    exec gdb --args "$PROGRAM" "${ARGS[@]}"
+else 
+    exec "$PROGRAM" "${ARGS[@]}" 
+fi
 
 # $PROGRAM "-i $IP -p $PORT -j $THREAD_NUM -r $ROOT_PATH -t $TIMEOUT \
 #     -f $LOG_FNAME -R $LOG_DIR -l $LOG_LEVEL -s $LOG_ROLLSIZE -u $LOG_FLUSH_TIME"
