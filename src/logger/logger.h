@@ -52,14 +52,14 @@ public:
 
     LogStream& stream();
 
+    static void enableLogger(bool enable);          // 开关日志输出
+    static void setLogLevel(LogLevel level);  // 设置日志级别
     static LogLevel getLogLevel(); 
-    static void setLogLevel(LogLevel level); 
-
+    
     // using OutputFunc = void(*)(const char* msg, int len);
     // using FlushFunc = void(*)(); 
     using OutputFunc = std::function<void(const char*, int)>;
     using FlushFunc = std::function<void()>;
-
     static void setOutput(OutputFunc);  // Logger输出回调, 指定具体输出操作, 写到哪.
     static void setFlush(FlushFunc); 
 
@@ -80,12 +80,17 @@ private:
     Impl impl_; 
 };
 
-// 日志级别、输出回调、flush回调.
+// 是否输出日志, 日志级别、输出回调、flush回调.
+extern bool g_log;
 extern Logger::LogLevel g_log_level; 
 extern Logger::OutputFunc g_output; 
 extern Logger::FlushFunc g_flush;  
 
 extern const char* LogLevelName[Logger::NUM_LOG_LEVELS];
+
+inline void Logger::enableLogger(bool enable) {
+    g_log = enable;
+}
 
 inline Logger::LogLevel Logger::getLogLevel() {
     return g_log_level; 
@@ -96,28 +101,19 @@ inline LogStream& Logger::stream() {
 }
 
 // 定义日志宏
-#define LOG_TRACE if (Logger::getLogLevel() <= Logger::TRACE) \
+#define LOG_TRACE if (g_log && Logger::getLogLevel() <= Logger::TRACE) \
     Logger(__FILE__, __LINE__, Logger::TRACE, __func__).stream()
 
-#define LOG_DEBUG if (Logger::getLogLevel() <= Logger::DEBUG) \
+#define LOG_DEBUG if (g_log && Logger::getLogLevel() <= Logger::DEBUG) \
     Logger(__FILE__, __LINE__, Logger::DEBUG, __func__).stream()
 
-#define LOG_INFO if (Logger::getLogLevel() <= Logger::INFO) \
+#define LOG_INFO if (g_log && Logger::getLogLevel() <= Logger::INFO) \
     Logger(__FILE__, __LINE__).stream()
 
-// #define LOG_WARN     Logger(__FILE__, __LINE__, Logger::WARN).stream()
-// #define LOG_ERROR    Logger(__FILE__, __LINE__, Logger::ERROR).stream()
-// #define LOG_FATAL    Logger(__FILE__, __LINE__, Logger::FATAL).stream()
-// #define LOG_SYSERR   Logger(__FILE__, __LINE__, false).stream()
-// #define LOG_SYSFATAL Logger(__FILE__, __LINE__, true).stream()
-
-#define LOG_WARN if (Logger::getLogLevel() <= Logger::WARN) \
-    Logger(__FILE__, __LINE__, Logger::WARN).stream()
-#define LOG_ERROR if (Logger::getLogLevel() <= Logger::ERROR) \
-    Logger(__FILE__, __LINE__, Logger::ERROR).stream()
+#define LOG_WARN if (g_log) Logger(__FILE__, __LINE__, Logger::WARN).stream()
+#define LOG_ERROR if (g_log) Logger(__FILE__, __LINE__, Logger::ERROR).stream()
+#define LOG_SYSERR if (g_log) Logger(__FILE__, __LINE__, false).stream()
 #define LOG_FATAL    Logger(__FILE__, __LINE__, Logger::FATAL).stream()
-#define LOG_SYSERR if (Logger::getLogLevel() <= Logger::ERROR) \
-    Logger(__FILE__, __LINE__, false).stream()
 #define LOG_SYSFATAL Logger(__FILE__, __LINE__, true).stream()
 
 const char* strerror_tl(int saved_errno);

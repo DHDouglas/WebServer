@@ -27,6 +27,8 @@ public:
     std::string root_path_ = "./resources";
     // HttpConnection的超时时间
     double timeout_seconds_ = 30;
+    // 是否输出日志
+    bool log_enable = false;    // 默认不输出
     // 日志文件名
     std::string log_file_name_ = "HttpServerLog";
     // 日志生成目录

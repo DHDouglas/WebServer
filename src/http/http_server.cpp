@@ -16,18 +16,23 @@ HttpServer::HttpServer(const Config& config)
     tcp_server_(&loop_, config.ip.empty()?InetAddress(config.port):InetAddress(config.port), "HttpServer")
 {   
     Logger::setLogLevel(config.log_level_);
-    // 记录日志到文件. 默认输出到stdout.
-    if (!config.log_file_name_.empty() &&
-         config.log_rollsize_ > 0 && 
-         config.log_flush_interval_seconds_ > 0) {  
-        async_logger_ = make_unique<AsyncLogger>(
-            config.log_file_name_, 
-            config.log_dir_, 
-            config.log_rollsize_, 
-            config.log_flush_interval_seconds_); 
-        Logger::setOutput(bind(&HttpServer::logOutputToFile, this, placeholders::_1, placeholders::_2)); 
+    if (config.log_enable) {
+        Logger::enableLogger(true); 
+        // 输出日志到文件. 默认输出到stdout.
+        if (!config.log_file_name_.empty() &&
+            config.log_rollsize_ > 0 && 
+            config.log_flush_interval_seconds_ > 0) 
+        {  
+            async_logger_ = make_unique<AsyncLogger>(
+                config.log_file_name_, 
+                config.log_dir_, 
+                config.log_rollsize_, 
+                config.log_flush_interval_seconds_); 
+            Logger::setOutput(bind(&HttpServer::logOutputToFile, this, placeholders::_1, placeholders::_2)); 
+        }
+    } else {
+        Logger::enableLogger(false);   // 关闭日志输出.
     }
-
     tcp_server_.setThreadNum(config.num_thread); 
     tcp_server_.setConnectionCallback(
         bind(&HttpServer::onConnection, this, placeholders::_1)); 

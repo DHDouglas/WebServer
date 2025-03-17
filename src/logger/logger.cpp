@@ -2,7 +2,6 @@
 
 #include "thread.h"
 
-Logger::LogLevel g_log_level = Logger::INFO; 
 
 // 默认日志输出回调: 输出到stdout
 void defaultOutput(const char* msg, int len) {
@@ -13,6 +12,9 @@ void defaultFlush() {
     fflush(stdout); 
 }
 
+// 日志相关的全局变量
+bool g_log = true; 
+Logger::LogLevel g_log_level = Logger::INFO; 
 Logger::OutputFunc g_output = defaultOutput;
 Logger::FlushFunc g_flush = defaultFlush;
 

@@ -17,6 +17,7 @@ void Config::parseArgs(int argc, char* argv[]) {
         {"thread", required_argument, 0, 'j'},      // --thread <num_threads>
         {"path", required_argument, 0, 'r'},        // --path <web root path>
         {"timeout", required_argument, 0, 't'},     // --timeout <seconds>
+        {"log", no_argument, 0, 'L'},               // --log
         {"logfname", required_argument, 0, 'f'},    // --logfname <file_name>
         {"logdir", required_argument, 0, 'R'},      // --logdir <dir path>
         {"loglevel", required_argument, 0, 'l'},    // --loglevel <level>
@@ -25,9 +26,9 @@ void Config::parseArgs(int argc, char* argv[]) {
         {0, 0, 0, 0}  // 结束标志
     };
 
-    const char* optstring = "hi:p:j:r:t:f:R:l:s:u:";
+    const char* optstring = "hi:p:j:r:t:Lf:R:l:s:u:";
     int opt;
-    while ((opt = getopt_long(argc, argv, optstring,long_options, nullptr)) != -1) {
+    while ((opt = getopt_long(argc, argv, optstring, long_options, nullptr)) != -1) {
         switch (opt) {
             case 'h': {
                 printHelp(argv[0]); 
@@ -38,6 +39,7 @@ void Config::parseArgs(int argc, char* argv[]) {
             case 'j': num_thread = stoi(optarg); break;
             case 'r': root_path_ = optarg; break;
             case 't': timeout_seconds_ = stoi(optarg); break;
+            case 'L': log_enable = true; break;
             case 'f': log_file_name_ = optarg; break;
             case 'R': log_dir_ = optarg; break;
             case 'l': setLogLevel(optarg); break;
@@ -63,7 +65,8 @@ void Config::printHelp(const char* program) const {
          << "  -j, --thread <num>        Set the number of IO threads(subReactors)\n"
          << "  -r, --path <dir>          Set the root path of Web resources\n"
          << "  -t, --timeout <num>       Set the timeout seconds of http connection\n"
-         << "  -f, --logfname <name>     Set the name of log file. Default logging to stdout\n"
+         << "  -L, --log                 Set enable the log output\n"
+         << "  -f, --logfname <name>     Set the name of log file. When empty, logging to stdout\n"
          << "  -R, --logdir <dir>        Set the dir of log file.\n"
          << "  -l, --loglevel <num>      Set the log level. 0:TRACE, 1:DEBUG, 2:INFO, 3:WARN, 4:ERROR, 5:FATAL\n"
          << "  -s, --logrollsze <num>    Set the max size of one single log file in bytes\n"
@@ -104,15 +107,23 @@ string Config::ensureAbsoluteRootPath(string path) {
 
 
 void Config::printArgs() const {
+    constexpr double eps = 1e-9; 
     cout << "Options:\n"
          << "  ip: " << (ip.empty() ? "0.0.0.0" : ip) << "\n"
          << "  port: " << port << "\n"
          << "  the number of IO threads: "  << num_thread << "\n"
          << "  the web root path: " << root_path_ << "\n"
-         << "  the timeout seconds of http connection: " << timeout_seconds_ << "\n"
-         << "  log file name: " << log_file_name_ <<"\n"
-         << "  log dir: " << log_dir_ << "\n"
-         << "  log level: " << LogLevelName[log_level_] << "\n"
-         << "  log rollsze(max bytes in a single log file): " << log_rollsize_ << "\n"
-         << "  log flush interval seconds (flush from buffer to log file): " << log_flush_interval_seconds_ << "\n";
+         << "  the timeout seconds of http connection: " << (fabs(timeout_seconds_) < eps ? "disable" : to_string(timeout_seconds_))  << "\n"
+         << "  log enable: " << log_enable << "\n";
+    
+    if (!log_enable) return;
+    cout << "  log level: " << LogLevelName[log_level_] << "\n";
+    if (log_file_name_.empty()) {
+        cout << "  log output: to stdout" << "\n";
+    } else {
+        cout << "  log file name: " << log_file_name_ << "\n"
+             << "  log dir: " << log_dir_ << "\n"
+             << "  log rollsze(max bytes in a single log file): " << log_rollsize_ << "\n"
+             << "  log flush interval seconds (flush from buffer to log file): " << log_flush_interval_seconds_ << "\n";
+    }
 }
