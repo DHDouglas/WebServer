@@ -105,10 +105,19 @@ inline LogStream& Logger::stream() {
 #define LOG_INFO if (Logger::getLogLevel() <= Logger::INFO) \
     Logger(__FILE__, __LINE__).stream()
 
-#define LOG_WARN     Logger(__FILE__, __LINE__, Logger::WARN).stream()
-#define LOG_ERROR    Logger(__FILE__, __LINE__, Logger::ERROR).stream()
+// #define LOG_WARN     Logger(__FILE__, __LINE__, Logger::WARN).stream()
+// #define LOG_ERROR    Logger(__FILE__, __LINE__, Logger::ERROR).stream()
+// #define LOG_FATAL    Logger(__FILE__, __LINE__, Logger::FATAL).stream()
+// #define LOG_SYSERR   Logger(__FILE__, __LINE__, false).stream()
+// #define LOG_SYSFATAL Logger(__FILE__, __LINE__, true).stream()
+
+#define LOG_WARN if (Logger::getLogLevel() <= Logger::WARN) \
+    Logger(__FILE__, __LINE__, Logger::WARN).stream()
+#define LOG_ERROR if (Logger::getLogLevel() <= Logger::ERROR) \
+    Logger(__FILE__, __LINE__, Logger::ERROR).stream()
 #define LOG_FATAL    Logger(__FILE__, __LINE__, Logger::FATAL).stream()
-#define LOG_SYSERR   Logger(__FILE__, __LINE__, false).stream()
+#define LOG_SYSERR if (Logger::getLogLevel() <= Logger::ERROR) \
+    Logger(__FILE__, __LINE__, false).stream()
 #define LOG_SYSFATAL Logger(__FILE__, __LINE__, true).stream()
 
 const char* strerror_tl(int saved_errno);
