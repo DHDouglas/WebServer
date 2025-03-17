@@ -12,6 +12,7 @@
 #include "eventloop.h"
 #include "logger.h"
 #include "http_message.h"
+#include "timestamp.h"
 
 
 const unordered_map<HttpStatusCode, string> ERROR_RET_FILE_PATH = {
@@ -33,12 +34,15 @@ HttpConnection::HttpConnection(std::weak_ptr<TcpConnection> tcp_conn,
                                std::string root_path_, 
                                Duration timeout_duration)
     : timeout_duration_(timeout_duration),
+    useTimeout_(timeout_duration_ != Timestamp::Duration(0)),
     root_path_(root_path_),
     tcp_conn_wkptr(tcp_conn)
 {
-    if (auto conn_sptr = tcp_conn_wkptr.lock()) {
-        timer_wkptr_ = conn_sptr->getOwnerLoop()->runAfter(
-            timeout_duration_, bind(&HttpConnection::handleTimer, tcp_conn_wkptr));
+    if (useTimeout_) {
+        if (auto conn_sptr = tcp_conn_wkptr.lock()) {
+            timer_wkptr_ = conn_sptr->getOwnerLoop()->runAfter(
+                timeout_duration_, bind(&HttpConnection::handleTimer, tcp_conn_wkptr));
+        }
     } 
 }
 
@@ -53,13 +57,17 @@ void HttpConnection::handleTimer(const std::weak_ptr<TcpConnection>& conn_wkptr)
 
 
 HttpConnection::~HttpConnection() {
-    removeTimer();
+    if (useTimeout_) {
+        removeTimer();
+    }
     LOG_DEBUG << "HttpConnection::~HttpConnection this::" <<  this 
               << " tcp_conn_wkptr use count: " << tcp_conn_wkptr.use_count();
 }
 
 void HttpConnection::restartTimer() {
-    if (auto conn_sptr = tcp_conn_wkptr.lock()) {
+    auto conn_sptr = tcp_conn_wkptr.lock();
+    auto timer_sptr = timer_wkptr_.lock(); 
+    if (conn_sptr && timer_sptr) {
         conn_sptr->getOwnerLoop()->removeTimer(timer_wkptr_); 
         timer_wkptr_ = conn_sptr->getOwnerLoop()->runAfter(
             timeout_duration_, bind(&HttpConnection::handleTimer, tcp_conn_wkptr));
@@ -80,7 +88,9 @@ void HttpConnection::forceClose() const {
 }
 
 void HttpConnection::removeTimer() {
-    if (auto conn_sptr = tcp_conn_wkptr.lock()) {
+    auto conn_sptr = tcp_conn_wkptr.lock();
+    auto timer_sptr = timer_wkptr_.lock(); 
+    if (conn_sptr && timer_sptr) {
         // 清除定时器, 关闭tcp连接. 
         LOG_TRACE << "HttpConnection::forceClose(): conn_sptr.use_count: " << conn_sptr.use_count();
         LOG_TRACE << "HttpConnection::forceClose(): conn_sptr.get " << conn_sptr.get();
@@ -91,7 +101,9 @@ void HttpConnection::removeTimer() {
 
 void HttpConnection::handleMessage(Buffer* buf) {
     // 重置超时时间
-    restartTimer(); 
+    if (useTimeout_) {
+        restartTimer(); 
+    }
     size_t size = buf->readableBytes(); 
     size_t parsed_size = 0; 
     auto ret = parser_.parse(buf->peek(), size, parsed_size);
@@ -102,6 +114,11 @@ void HttpConnection::handleMessage(Buffer* buf) {
         // 解析得到完整HTTP请求报文, 处理请求.
         LOG_TRACE << "HttpServer::onMessage http request parsing successed"; 
         handleRequest();
+        // ! For test: 直接回传OK报文.
+        // if (auto tcp_conn_sptr = tcp_conn_wkptr.lock()) {
+        //     tcp_conn_sptr->send("HTTP/1.0 200 OK\r\n\r\n");
+        //     shutdown();
+        // }
     } else if (ret == R::ERROR) {
         LOG_WARN << "HttpServer::onMessage http request parsing error"; 
         sendErrorResponse(HttpStatusCode::BadRequest);
@@ -111,7 +128,7 @@ void HttpConnection::handleMessage(Buffer* buf) {
 }
 
 void HttpConnection::handleRequest() {
-    LOG_INFO << parser_.encode(); 
+    LOG_TRACE << parser_.encode(); 
     HttpResponse response; 
     HttpStatusCode code = HttpStatusCode::OK; 
     MmapData mmap_data; 
@@ -191,7 +208,9 @@ void HttpConnection::sendResponse(const HttpResponse& response) {
         forceClose();
     }
     // 重置超时时间
-    restartTimer(); 
+    if (useTimeout_) {
+        restartTimer(); 
+    }
 }
 
 // 处理url路径, 若有效且目标文件存在&可访问, 则返回文件的绝对路径.

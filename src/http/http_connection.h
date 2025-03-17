@@ -55,6 +55,7 @@ private:
 
     HttpParser parser_;
     Duration timeout_duration_;
+    bool useTimeout_; 
     std::string root_path_; 
     std::weak_ptr<TcpConnection> tcp_conn_wkptr; 
     std::weak_ptr<Timer> timer_wkptr_; 
