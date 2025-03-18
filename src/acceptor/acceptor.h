@@ -28,4 +28,5 @@ private:
     Channel accept_channel_; 
     NewConnectionCallBack newConnCallBack_; 
     std::atomic<bool> listening_; 
+    int idlefd_;       // 用于处理文件描述符耗尽
 };

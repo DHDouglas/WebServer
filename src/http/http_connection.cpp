@@ -87,7 +87,7 @@ void HttpConnection::restartTimer() {
 
 void HttpConnection::shutdown() const {
     if (auto conn_sptr = tcp_conn_wkptr.lock()) {
-        conn_sptr->forceClose(); 
+        conn_sptr->shutdown(); 
     }
 }
 
@@ -128,7 +128,7 @@ void HttpConnection::handleMessage(Buffer* buf) {
         // ! For test: 直接回传OK报文.
         // if (auto tcp_conn_sptr = tcp_conn_wkptr.lock()) {
         //     tcp_conn_sptr->send("HTTP/1.0 200 OK\r\n\r\n");
-        //     shutdown();
+        //     forceClose();
         // }
     } else if (ret == R::ERROR) {
         LOG_WARN << "HttpServer::onMessage http request parsing error"; 
@@ -259,14 +259,8 @@ void HttpConnection::sendResponse(const HttpResponse& response) {
     // 短连接下, 服务器端回发响应报文后关闭写端.
     if (!parser_.isKeepAlive()) {
         shutdown();
-    }
-    // 服务器内部错误, 考虑关闭整个连接?
-    string code_str = response.getCodeAsString(); 
-    if (code_str[0] == '5') {
         forceClose();
-    }
-    // 重置超时时间
-    if (useTimeout_) {
+    } else if (useTimeout_) {
         restartTimer(); 
     }
 }
@@ -295,6 +289,8 @@ bool HttpConnection::MmapData::mmap(const string& file_path) {
         fd_ = -1;
         return false; 
     }
+    close(fd_); 
+    fd_ = -1;
     return true;
 }
 

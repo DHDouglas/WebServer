@@ -7,6 +7,7 @@ PORT=80                      # 监听端口.
 THREAD_NUM=3                 # IO线程数量. 即subReactor数量, 为0则主线程兼做IO线程.
 ROOT_PATH="./resources"      # Web资源文件根路径.
 TIMEOUT=30                   # HttpConnection 超时时间.(为0时表示不启用定时器)
+MAX_CONN=10000               # 限制服务器允许的最大并发连接数
 LOG_ENABLE=1                 # 是否开启日志输出. 1开启, 0关闭.
 LOG_FNAME="HttpServerLog"    # 日志文件名(为空时将输出到stdout)
 LOG_DIR="./log"              # 日志目录
@@ -23,6 +24,7 @@ ARGS+=("-p" "$PORT")
 ARGS+=("-j" "$THREAD_NUM")
 ARGS+=("-r" "$ROOT_PATH")
 ARGS+=("-t" "$TIMEOUT")
+ARGS+=("-c" "$MAX_CONN")
 if (( LOG_ENABLE )); then
     ARGS+=("-L")
     ARGS+=("-f" "$LOG_FNAME")
@@ -32,6 +34,8 @@ if (( LOG_ENABLE )); then
     ARGS+=("-u" "$LOG_FLUSH_TIME")
 fi
 
+
+ulimit -n 65535
 
 if [[ "$1" == "--gdb" ]]; then
     shift   # 移除 --gdb 参数

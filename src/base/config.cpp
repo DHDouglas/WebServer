@@ -17,6 +17,7 @@ void Config::parseArgs(int argc, char* argv[]) {
         {"thread", required_argument, 0, 'j'},      // --thread <num_threads>
         {"path", required_argument, 0, 'r'},        // --path <web root path>
         {"timeout", required_argument, 0, 't'},     // --timeout <seconds>
+        {"maxconn", required_argument, 0, 'c'},     // --maxconn <num>
         {"log", no_argument, 0, 'L'},               // --log
         {"logfname", required_argument, 0, 'f'},    // --logfname <file_name>
         {"logdir", required_argument, 0, 'R'},      // --logdir <dir path>
@@ -26,7 +27,7 @@ void Config::parseArgs(int argc, char* argv[]) {
         {0, 0, 0, 0}  // 结束标志
     };
 
-    const char* optstring = "hi:p:j:r:t:Lf:R:l:s:u:";
+    const char* optstring = "hi:p:j:r:t:c:Lf:R:l:s:u:";
     int opt;
     while ((opt = getopt_long(argc, argv, optstring, long_options, nullptr)) != -1) {
         switch (opt) {
@@ -39,6 +40,7 @@ void Config::parseArgs(int argc, char* argv[]) {
             case 'j': num_thread = stoi(optarg); break;
             case 'r': root_path_ = optarg; break;
             case 't': timeout_seconds_ = stoi(optarg); break;
+            case 'c': max_connections_ = stoi(optarg); break;
             case 'L': log_enable = true; break;
             case 'f': log_file_name_ = optarg; break;
             case 'R': log_dir_ = optarg; break;
@@ -66,6 +68,7 @@ void Config::printHelp(const char* program) const {
          << "  -j, --thread <num>        Set the number of IO threads(subReactors)\n"
          << "  -r, --path <dir>          Set the root path of Web resources\n"
          << "  -t, --timeout <num>       Set the timeout seconds of http connection\n"
+         << "  -c, --maxconn <num>       Set the maximum amount of concurrent connections allowed\n"
          << "  -L, --log                 Set enable the log output\n"
          << "  -f, --logfname <name>     Set the name of log file. When empty, logging to stdout\n"
          << "  -R, --logdir <dir>        Set the dir of log file.\n"
@@ -115,6 +118,7 @@ void Config::printArgs() const {
          << "  the number of IO threads: "  << num_thread << "\n"
          << "  the web root path: " << root_path_ << "\n"
          << "  the timeout seconds of http connection: " << (fabs(timeout_seconds_) < eps ? "disable" : to_string(timeout_seconds_))  << "\n"
+         << "  the maximum amount of concurrent connections: " << max_connections_ << "\n"
          << "  log enable: " << log_enable << "\n";
     
     if (!log_enable) return;

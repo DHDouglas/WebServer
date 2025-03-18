@@ -1,6 +1,8 @@
 #pragma once
 
+#include <cstdint>
 #include <memory>
+
 #include "tcp_server.h"
 #include "eventloop.h"
 #include "tcp_connection.h"
@@ -31,4 +33,5 @@ private:
     Config config_;                // 配置项               
     std::unique_ptr<AsyncLogger> async_logger_;  
     TcpServer tcp_server_;
+    std::atomic<uint32_t> num_connected_;
 };

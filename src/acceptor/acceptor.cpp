@@ -2,6 +2,7 @@
 
 #include <sys/socket.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 #include "eventloop.h"
 #include "logger.h"
@@ -13,7 +14,8 @@ Acceptor::Acceptor(EventLoop* loop, const InetAddress& listen_addr)
     addr_(listen_addr), 
     sockfd_(createSocketAndBind()),
     accept_channel_(loop, sockfd_),
-    listening_(false)
+    listening_(false),
+    idlefd_(::open("/dev/null", O_RDONLY | O_CLOEXEC))
 {
     accept_channel_.setReadCallback(bind(&Acceptor::handleAccept, this));
 }
@@ -75,9 +77,10 @@ void Acceptor::handleAccept() {
             peer_addr.setSockAddrInet6(sockaddr6); 
             newConnCallBack_(connfd, peer_addr);  // 执行新连接的回调
         } else {
-            close(connfd); 
+            ::close(connfd); 
         }
     } else {
+        LOG_SYSERR << "Acceptor::handleAccept() accept";
         int saved_errno = errno;
         switch (saved_errno)
         {
@@ -99,12 +102,21 @@ void Acceptor::handleAccept() {
           case ENOTSOCK:
           case EOPNOTSUPP:
             // unexpected errors
-            LOG_SYSFATAL << "unexpected error of ::accept " << saved_errno;
+            LOG_FATAL << "unexpected error of ::accept " << saved_errno;
             break; 
           default:
-            LOG_SYSFATAL << "unknown error of ::accept " << saved_errno;
+            LOG_FATAL << "unknown error of ::accept " << saved_errno;
             break;
         }
-        LOG_SYSFATAL << "Acceptor::handleAccept() accept"; 
+        // Read the section named "The special problem of
+        // accept()ing when you can't" in libev's doc.
+        // By Marc Lehmann, author of libev.
+        if (errno == EMFILE)
+        {
+          ::close(idlefd_);
+          idlefd_ = ::accept(sockfd_, NULL, NULL);
+          ::close(idlefd_);
+          idlefd_ = ::open("/dev/null", O_RDONLY | O_CLOEXEC);
+        }
     }
 }

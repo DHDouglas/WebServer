@@ -13,7 +13,8 @@ using namespace std;
 
 HttpServer::HttpServer(const Config& config)
     : config_(config),
-    tcp_server_(&loop_, config.ip.empty()?InetAddress(config.port):InetAddress(config.port), "HttpServer")
+    tcp_server_(&loop_, config.ip.empty()?InetAddress(config.port):InetAddress(config.port), "HttpServer"),
+    num_connected_(0)
 {   
     Logger::setLogLevel(config.log_level_);
     if (config.log_enable) {
@@ -55,8 +56,13 @@ void HttpServer::start() {
 
 
 void HttpServer::onConnection(const TcpServer::TcpConnectionPtr& tcp_conn) {
+    LOG_INFO << "HttpConnection:" << tcp_conn->getPeerAddress().getIpPortString() 
+             << " is " << (tcp_conn->connected() ? "UP" : "DOWN"); 
     if (tcp_conn->connected()) {
-        LOG_TRACE << "HttpServer::onConnection: new HttpConnection"; 
+        ++num_connected_;
+        if (num_connected_ > config_.max_connections_) {
+            tcp_conn->shutdown(); 
+        }
         // TcpConnection的context_以`shared_ptr`的形式绑定HttpConnection, 
         // 旨在让HttpConnection的回调函数能通过weak_ptr<HttpConnection>的形式绑定而不是通过HttpConnection::this, 
         // 防止TcpConnection析构后HttpConnection也失效, 回调实际执行时触发段错误.
@@ -66,7 +72,7 @@ void HttpServer::onConnection(const TcpServer::TcpConnectionPtr& tcp_conn) {
             Timestamp::secondsToDuration(config_.timeout_seconds_)
         ));
     } else {
-        LOG_TRACE << "HttpServer::onConnection: remove tcp_conn";
+        --num_connected_;
     }
 }
 

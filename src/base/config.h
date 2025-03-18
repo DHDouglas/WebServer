@@ -1,6 +1,8 @@
 #pragma once
 
+#include <cstddef>
 #include <string>
+
 #include <logger.h>
 
 class Config {
@@ -27,6 +29,8 @@ public:
     std::string root_path_ = "./resources";
     // HttpConnection的超时时间
     double timeout_seconds_ = 30;
+    // 允许的最大连接数量
+    size_t max_connections_ = 10000; 
     // 是否输出日志
     bool log_enable = false;    // 默认不输出
     // 日志文件名
