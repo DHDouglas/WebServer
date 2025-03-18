@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <cassert>
 #include <sys/uio.h>
+#include <netinet/tcp.h>  // TCP_NODELAY
 
 #include "eventloop.h"
 #include "logger.h"
@@ -41,6 +42,9 @@ TcpConnection::TcpConnection(EventLoop* loop,
     // int optval = 1; 
     // ::setsockopt(channel_.getFd(), SOL_SOCKET, SO_KEEPALIVE,
     //              &optval, static_cast<socklen_t>(sizeof optval));
+    // Tcp NoDelay(关闭Nagle算法)
+    // int optval = 1; 
+    // ::setsockopt(sockfd, IPPROTO_TCP, TCP_NODELAY, &optval, sizeof(optval));
 }   
 
 

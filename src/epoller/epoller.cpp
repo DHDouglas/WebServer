@@ -116,6 +116,7 @@ void Epoller::removeChannel(Channel* channel) {
 
     size_t rec = channels_.erase(fd);
     assert(rec == 1);
+    (void)rec;
 
     if (state == State::LISTENING) {
         epollUpdate(EPOLL_CTL_DEL, channel); 

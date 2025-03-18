@@ -84,7 +84,8 @@ void Logger::Impl::formatTime() {
         int len = snprintf(t_time, sizeof(t_time), "%4d%02d%02d %02d:%02d:%02d", 
             tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, 
             tm.tm_hour, tm.tm_min, tm.tm_sec); 
-        assert(len == 17); 
+        assert(len == 17);
+        (void)len;
     }
 
     Fmt us(".%06d ", remainder_us);  

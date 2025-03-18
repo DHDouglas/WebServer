@@ -76,7 +76,7 @@ HttpParser::ParseResult HttpParser::parse(const char* data, const size_t len, si
 
 HttpParser::ParseResult HttpParser::parseRequestLine() {
     using State = ParseRequestLineState; 
-    const char* method, *uri, *version; 
+    const char* method = nullptr, *uri = nullptr, *version = nullptr; 
     while (pos != end) {
         switch (parse_rl_state) {
             case State::BEFORE_METHOD: {
@@ -161,7 +161,7 @@ HttpParser::ParseResult HttpParser::parseHeader() {
     // 解析name时利用一个name_buf缓冲区记录name, 而value则直接用指针指示起始位置. 
     // 当得到完整的name-value后, 再记录. 
     using State = ParseHeaderState;
-    const char* value; 
+    const char* value = nullptr; 
     while (pos != end) { 
         switch (parse_hd_state) {
             case State::BEFORE_KEY: {

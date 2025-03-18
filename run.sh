@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PROGRAM="./build/Debug/bin/http_server"
+BUILD_TYPE="Release"
 
 IP=""                        # 监听地址. 为空时监听所有地址.
 PORT=80                      # 监听端口.
@@ -34,15 +34,21 @@ if (( LOG_ENABLE )); then
     ARGS+=("-u" "$LOG_FLUSH_TIME")
 fi
 
-
+# 允许最大文件描述符数
 ulimit -n 65535
 
-if [[ "$1" == "--gdb" ]]; then
-    shift   # 移除 --gdb 参数
-    exec gdb --args "$PROGRAM" "${ARGS[@]}"
-else 
-    exec "$PROGRAM" "${ARGS[@]}" 
+if [[ "$1" == "--debug" ]]; then
+    BUILD_TYPE="Debug"
+elif [[ "$1" == "--gdb" ]]; then
+    exec gdb --args "./build/Debug/bin/http_server" "${ARGS[@]}"
+elif [[ -n "$1" ]]; then
+    echo "Unknown option: $1"
+    exit 1
 fi
+
+PROGRAM="./build/${BUILD_TYPE}/bin/http_server"
+echo "$PROGRAM" "${ARGS[@]}"
+exec "$PROGRAM" "${ARGS[@]}"
 
 # $PROGRAM "-i $IP -p $PORT -j $THREAD_NUM -r $ROOT_PATH -t $TIMEOUT \
 #     -f $LOG_FNAME -R $LOG_DIR -l $LOG_LEVEL -s $LOG_ROLLSIZE -u $LOG_FLUSH_TIME"

@@ -87,6 +87,7 @@ void TcpServer::removeConnectionInLoop(const TcpConnectionPtr& conn) {
 
     size_t n = connections_.erase(conn_name);
     assert(n == 1); 
+    (void)n;
     // 获取conn所属EventLoop, 放到该loop所在IO线程执行
     EventLoop* ioLoop = conn->getOwnerLoop();
     // 必须加到EventLoop的任务队列中作为PendingFunctor执行, 

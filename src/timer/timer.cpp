@@ -61,7 +61,8 @@ bool TimerManager::insert(const shared_ptr<Timer>& ptr_timer) {
     }
     
     auto res = timers_.insert(Entry(exp, ptr_timer)); 
-    assert(res.second); 
+    assert(res.second);
+    (void)res; 
     return update_timerfd; 
 }
 
