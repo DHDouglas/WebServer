@@ -271,14 +271,16 @@ HttpParser::ParseResult HttpParser::parseBody() {
 
 
 bool HttpParser::checkMethod(const char* str, size_t len) {
-    bool ret = false; 
-    if (strncasecmp(str, "GET",  len) == 0) ret = true; 
-    if (strncasecmp(str, "POST", len) == 0) ret = true;
-    if (strncasecmp(str, "HEAD", len) == 0) ret = true;
-    if (ret) {
-        this->method = string(str, len); 
-    }
-    return ret;
+    // bool ret = false; 
+    // if (strncasecmp(str, "GET",  len) == 0)  ret = true; 
+    // if (strncasecmp(str, "POST", len) == 0) ret = true;
+    // if (strncasecmp(str, "HEAD", len) == 0) ret = true;
+    // if (ret) {
+    //     this->method = string(str, len); 
+    // }
+    // return ret;
+    this->method = string(str, len); 
+    return true;
 }
 
 bool HttpParser::checkUri(const char* str, size_t len) {

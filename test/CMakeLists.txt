@@ -74,6 +74,12 @@ target_link_libraries(config_test PRIVATE MyObjects)
 add_executable(any_class_test any_class_test.cpp)
 target_link_libraries(any_class_test PRIVATE MyObjects)
 
+add_executable(http_server_unittest http_server_unittest.cpp)
+target_link_libraries(http_server_unittest PRIVATE MyObjects)
+target_link_libraries(http_server_unittest PRIVATE gtest gtest_main pthread)
+add_test(NAME http_server_unittest COMMAND http_server_unittest)
+
+
 add_custom_target(all_test_exec DEPENDS
     eventloop1_test
     eventloop2_test
@@ -98,4 +104,5 @@ add_custom_target(all_test_exec DEPENDS
     httpserver_demo_test
     config_test
     any_class_test
+    http_server_unittest
 )

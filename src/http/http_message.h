@@ -16,10 +16,13 @@ enum class HttpMethod {
 }; 
 
 HttpMethod getHttpMethodAsEnum(const std::string& method); 
+std::string  getHttpMethodAsString(const HttpMethod& method); 
+
 
 enum class HttpStatusCode {
     Continue = 100,  
 	OK = 200,
+    NoContent = 204, 
     BadRequest = 400,
     Forbidden = 403, 
     NotFound = 404, 
@@ -31,6 +34,7 @@ const std::unordered_map<HttpStatusCode, std::pair<std::string, std::string>>
 STATUS_CODE_PHASE {
     {HttpStatusCode::Continue,    {"100", "Continue"}},
     {HttpStatusCode::OK,          {"200", "OK"}}, 
+    {HttpStatusCode::NoContent,   {"204", "No Content"}}, 
     {HttpStatusCode::BadRequest,  {"400", "Bad Request"}},
     {HttpStatusCode::Forbidden,   {"403", "Forbidden"}},
     {HttpStatusCode::NotFound,    {"404", "Not Found"}},
@@ -39,6 +43,7 @@ STATUS_CODE_PHASE {
 }; 
 
 std::string getHttpStatusCodeString(HttpStatusCode code);
+std::string getHttpStatusCodePhaseString(HttpStatusCode code);
 
 
 const std::unordered_map<std::string, std::string> CONTENT_TYPE = {

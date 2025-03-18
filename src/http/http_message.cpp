@@ -20,6 +20,14 @@ HttpMethod getHttpMethodAsEnum(const std::string &method) {
     return HttpMethod::UNKNOWN;
 }
 
+std::string  getHttpMethodAsString(const HttpMethod& method) {
+    switch (method) {
+        case HttpMethod::GET: return "GET"; 
+        case HttpMethod::HEAD: return "HEAD";
+        default: return "UNKNOWN"; 
+    }
+}
+
 string getHttpStatusCodeString(HttpStatusCode code) {
     auto it =  STATUS_CODE_PHASE.find(code);
     if (it == STATUS_CODE_PHASE.end()) {
@@ -27,6 +35,15 @@ string getHttpStatusCodeString(HttpStatusCode code) {
     }
     return it->second.first; 
 }
+
+string getHttpStatusCodePhaseString(HttpStatusCode code) {
+    auto it =  STATUS_CODE_PHASE.find(code);
+    if (it == STATUS_CODE_PHASE.end()) {
+        return ""; 
+    }
+    return it->second.first + " " + it->second.second;  
+}
+
 
 string getContentType(const std::string& path) {
     string::size_type pos = path.find_last_of('.'); 
@@ -75,13 +92,12 @@ bool HttpMessage::setHeaders(vector<pair<string, string>> headers) {
 
 
 bool HttpMessage::setBody(const void* data, size_t len) {
-    if (len > 0 && data != nullptr) {
-        body_ = data; 
-        body_size_ = len; 
-        // TODO: if chunked
-        return true;
-    }
-    return false;
+    // if (len > 0 && data != nullptr) {
+    // 允许body为空, 处理HEAD请求, 需要获取大小, 但不需要返回body.
+    body_ = data; 
+    body_size_ = len; 
+    // TODO: if chunked
+    return true;
 }
 
 int HttpMessage::encode(struct iovec vectors[], int max) const{
@@ -178,7 +194,9 @@ string HttpMessage::encode() const {
         ret += "\r\n";
     }
     ret += "\r\n";
-    ret += string((char*)body_, body_size_); 
+    if (body_ && body_size_ > 0) {
+        ret += string((char*)body_, body_size_); 
+    }
     return ret;
 }
 

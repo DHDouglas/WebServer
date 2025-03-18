@@ -1,6 +1,7 @@
 #include "http_connection.h"
 
 #include <climits>
+#include <string>
 #include <strings.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -142,19 +143,52 @@ void HttpConnection::handleMessage(Buffer* buf) {
 void HttpConnection::handleRequest() {
     LOG_TRACE << parser_.encode(); 
     string path = parser_.getUri(); 
+    // For benchmark testing.
+    if (path == "/benchmark") {
+        responseMsg("Hello World!", 12, HttpStatusCode::OK);  // 不取文件, 省略磁盘I/O
+        return; 
+    }
+    if (path == "/nocontent") {
+        responseMsg(nullptr, 0, HttpStatusCode::NoContent);
+        return;
+    }
+
     // URL匹配默认文件
     auto it = DEFAULT_FILE.find(path);
     if (it != DEFAULT_FILE.end()) {
         path = it->second;
     }
-    // TODO: 特殊路由
-
     // 请求静态资源
-    response(path); 
+    responseFile(path, HttpStatusCode::OK); 
 }
 
 
-void HttpConnection::response(const string& path) {
+void HttpConnection::responseMsg(const char* msg, size_t len, HttpStatusCode code) {
+    HttpResponse response; 
+    HttpMethod method = getHttpMethodAsEnum(parser_.getMethod()); 
+    if (method != HttpMethod::HEAD && method != HttpMethod::GET) {
+        return errorResponse(HttpStatusCode::NotImplemented); 
+    }
+
+    response.setVersion(parser_.getVersion());
+    response.setStatus(code);
+    if (msg && len > 0) {
+        assert(strlen(msg) == len); 
+        if (method == HttpMethod::GET) {
+            response.setBody(msg, len);  
+        }
+        response.addHeader("Content-Type", "text/plain");
+        response.addHeader("Content-Length", to_string(len)); 
+    }
+    if (!parser_.isKeepAlive()) {
+        response.addHeader("Connection", "close"); 
+    }
+    LOG_TRACE << response.encode();
+    sendResponse(response); 
+}
+
+
+void HttpConnection::responseFile(const string& path, HttpStatusCode code) {
     // 构造响应报文
     HttpResponse response; 
     MmapData mmap_data; 
@@ -189,11 +223,10 @@ void HttpConnection::response(const string& path) {
         // 获取文件大小与文件内容
         LOG_TRACE << real_path;
         if (method == HttpMethod::HEAD) {
-            response.addHeader("Content-Length", to_string(file_stat.st_size)); 
+            response.setBody(nullptr, file_stat.st_size);
         } else {
             if (mmap_data.mmap(real_path)) {
                 response.setBody(mmap_data.addr_, mmap_data.size_);
-                response.addHeader("Content-Length", to_string(response.getBodySize())); 
             } else {
                 return errorResponse(HttpStatusCode::InternalServerError);
             }
@@ -202,7 +235,8 @@ void HttpConnection::response(const string& path) {
     }
 
     response.setVersion(parser_.getVersion());
-    response.setStatus(HttpStatusCode::OK);
+    response.setStatus(code);
+    response.addHeader("Content-Length", to_string(response.getBodySize())); 
     if (!parser_.isKeepAlive()) {
         response.addHeader("Connection", "close"); 
     }
@@ -213,10 +247,8 @@ void HttpConnection::response(const string& path) {
 
 void HttpConnection::errorResponse(HttpStatusCode code) {
     LOG_TRACE << getHttpStatusCodeString(code); 
-
     HttpResponse response; 
     MmapData mmap_data;
-
     // 根据错误状态码, 获取对应返回的HTML文件: 
     string error_html_path = getErrorCodeRerturnFile(code); 
     if (!error_html_path.empty()) {
@@ -227,22 +259,24 @@ void HttpConnection::errorResponse(HttpStatusCode code) {
         { 
             HttpMethod method = getHttpMethodAsEnum(parser_.getMethod()); 
             if (method == HttpMethod::HEAD) {
-                response.addHeader("Content-Length", to_string(file_stat.st_size)); 
+                response.setBody(nullptr, file_stat.st_size);
                 response.addHeader("Content-Type", "text/html"); 
             } else {
                 if (mmap_data.mmap(error_html_path)) {
                     response.setBody(mmap_data.addr_, mmap_data.size_);
-                    response.addHeader("Content-Length", to_string(response.getBodySize()));
                     response.addHeader("Content-Type", "text/html"); 
                 }
             }
-        } 
-    } 
-    response.setVersion(parser_.getVersion());
+        }
+    }
+    string version = parser_.getVersion(); 
+    response.setVersion(version.empty() ? "HTTP/1.1" : version); // 若HTTP请求错误, 则解析结果无版本号.
     response.setStatus(code); 
-    if (!parser_.isKeepAlive()) {
+    response.addHeader("Content-Length", to_string(response.getBodySize()));
+    if (!parser_.isKeepAlive() || code == HttpStatusCode::BadRequest) {
         response.addHeader("Connection", "close"); 
     }
+    LOG_TRACE << response.encode(); 
     sendResponse(response);
 }
 
@@ -257,7 +291,7 @@ void HttpConnection::sendResponse(const HttpResponse& response) {
         tcp_conn_sptr->send(vecs, iovcnt);
     }
     // 短连接下, 服务器端回发响应报文后关闭写端.
-    if (!parser_.isKeepAlive()) {
+    if (!parser_.isKeepAlive() || response.getCode() == HttpStatusCode::BadRequest) {
         shutdown();
         forceClose();
     } else if (useTimeout_) {
@@ -266,7 +300,7 @@ void HttpConnection::sendResponse(const HttpResponse& response) {
 }
 
 
-bool HttpConnection::MmapData::mmap(const string& file_path) {
+bool MmapData::mmap(const string& file_path) {
     fd_ = open(file_path.c_str(), O_RDONLY);
     if (fd_ == -1) {
         LOG_SYSERR << "MmapData::MmapData open failed, file : " << file_path; 
@@ -294,7 +328,7 @@ bool HttpConnection::MmapData::mmap(const string& file_path) {
     return true;
 }
 
-HttpConnection::MmapData::~MmapData() {
+MmapData::~MmapData() {
     if (addr_) {
         munmap(addr_, size_);
     }
