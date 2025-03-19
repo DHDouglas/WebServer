@@ -3,23 +3,33 @@
 #include <memory>
 #include <string>
 
-#include "tcp_connection.h"
 #include "buffer.h"
 #include "timer.h"
 #include "http_message.h"
 #include "http_parser.h"
 #include "timing_wheel.h"
 
+class TcpConnection;
+
 class HttpConnection {
 public:
     using ParseResult = HttpParser::ParseResult; 
+    using TimerWeakPtr = TimingWheel::EntryWeakPtr;
+    using TcpConnectionWeakPtr = std::weak_ptr<TcpConnection>;
 
-    HttpConnection(std::weak_ptr<TcpConnection> tcp_conn,
-                   std::string root_path_, 
-                   Duration timeout_duration);
+public:
+    HttpConnection(TcpConnectionWeakPtr tcp_conn);
     ~HttpConnection();
     // 处理&解析HTTP请求报文
     void handleMessage(Buffer* buf);
+
+    TcpConnectionWeakPtr getTcpConnectionWeakPtr() const { return tcp_conn_wkptr; }
+    TimerWeakPtr getTimerWeakPtr() const { return timer_wkptr_; }
+
+    static void setRootPath(std::string root_path);
+    static void setTimeout(int seconds); 
+    // 定时器回调.
+    static void onTimer(Any& context);
 
 private:
     // 根据URL执行不同业务逻辑 
@@ -31,25 +41,22 @@ private:
     void errorResponse(HttpStatusCode code);
     // 发送报文
     void sendResponse(const HttpResponse& response);     // base.
-    // 定时器回调.
-    void static handleTimer(const std::weak_ptr<TcpConnection>& wk_ptr);
-    // 重置定时器
-    void restartTimer(); 
-    // 移除定时器
-    void removeTimer();
     // 仅关闭写端. 
     void shutdown() const;
     // 断开连接
     void forceClose() const;
 
+    // 重置定时器
+    void restartTimer(); 
+    // 移除定时器
+    void removeTimer();
+
 private:
     HttpParser parser_;
-    Duration timeout_duration_;
-    bool useTimeout_; 
-    std::string root_path_; 
-    std::weak_ptr<TcpConnection> tcp_conn_wkptr; 
-    // std::weak_ptr<Timer> timer_wkptr_; 
-    TimingWheel::EntryWeakPtr timer_wkptr_; 
+    TcpConnectionWeakPtr tcp_conn_wkptr; 
+    TimerWeakPtr timer_wkptr_; 
+    static std::string root_path_; 
+    static int timeout_seconds_;  
 };
 
 

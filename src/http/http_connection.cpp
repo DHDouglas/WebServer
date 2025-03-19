@@ -12,11 +12,10 @@
 #include <cassert>
 #include <unordered_map>
 
+#include "tcp_connection.h"
 #include "eventloop.h"
-#include "logger.h"
 #include "http_message.h"
-#include "timestamp.h"
-#include "timing_wheel.h"
+#include "logger.h"
 
 
 const unordered_map<HttpStatusCode, string> ERROR_RET_FILE = {
@@ -43,46 +42,42 @@ string getErrorCodeRerturnFile(HttpStatusCode code) {
     return it->second; 
 }
 
-HttpConnection::HttpConnection(std::weak_ptr<TcpConnection> tcp_conn,
-                               std::string root_path_, 
-                               Duration timeout_duration)
-    : timeout_duration_(timeout_duration),
-    useTimeout_(timeout_duration_ != Timestamp::Duration(0)),
-    root_path_(root_path_),
-    tcp_conn_wkptr(tcp_conn)
+std::string HttpConnection::root_path_; 
+int HttpConnection::timeout_seconds_;  
+
+void HttpConnection::setRootPath(std::string root_path) {
+    root_path_ = std::move(root_path);
+}
+
+void HttpConnection::setTimeout(int seconds) {
+    timeout_seconds_ = seconds; 
+}
+
+HttpConnection::HttpConnection(TcpConnectionWeakPtr tcp_conn) 
+    : tcp_conn_wkptr(tcp_conn)
 {
-    if (useTimeout_) {
-        if (auto conn_sptr = tcp_conn_wkptr.lock()) {
-            auto wheel = any_cast<unique_ptr<TimingWheel>>(conn_sptr->getOwnerLoop()->getMutableContext());
+    // 新增定时器
+    if (timeout_seconds_ > 0) {
+        if (auto conn_sptr = tcp_conn.lock()) {
+            auto wheel = any_cast<unique_ptr<TimingWheel>>(
+                conn_sptr->getOwnerLoop()->getMutableContext()
+            );
             timer_wkptr_ = (*wheel)->insert(tcp_conn); 
         }
-    } 
-}
-
-void HttpConnection::handleTimer(const std::weak_ptr<TcpConnection>& conn_wkptr) {
-    if (auto conn_sptr = conn_wkptr.lock()) {
-        LOG_DEBUG << "HttpConnection::forceCloseTest execude";
-        conn_sptr->forceClose(); 
-    } else {
-        LOG_DEBUG << "HttpConnection::forceCloseTest missed"; 
     }
 }
 
+void HttpConnection::onTimer(Any& context) {
+    auto conn_wkptr = any_cast<weak_ptr<TcpConnection>>(&context); 
+    if (auto conn_sptr = (*conn_wkptr).lock()) {
+        conn_sptr->forceClose(); 
+    }
+}
 
 HttpConnection::~HttpConnection() {
-    if (useTimeout_) {
-        removeTimer();
-    }
-    LOG_DEBUG << "HttpConnection::~HttpConnection this::" <<  this 
+    LOG_TRACE << "HttpConnection::~HttpConnection this::" <<  this 
               << " tcp_conn_wkptr use count: " << tcp_conn_wkptr.use_count();
-}
-
-void HttpConnection::restartTimer() {
-    auto conn_sptr = tcp_conn_wkptr.lock();
-    if (conn_sptr && !timer_wkptr_.expired()) {
-        auto wheel = any_cast<unique_ptr<TimingWheel>>(conn_sptr->getOwnerLoop()->getMutableContext());
-        (*wheel)->update(timer_wkptr_); 
-    } 
+    removeTimer();
 }
 
 void HttpConnection::shutdown() const {
@@ -92,28 +87,25 @@ void HttpConnection::shutdown() const {
 }
 
 void HttpConnection::forceClose() const {
-    LOG_TRACE << "HttpConnection::forceClose(): this:  " << this;
     if (auto conn_sptr = tcp_conn_wkptr.lock()) {
         conn_sptr->forceClose(); 
     }
 }
 
+void HttpConnection::restartTimer() {
+    if (auto timer = timer_wkptr_.lock()) {
+        timer->owner_wheel_->update(timer); 
+    }
+}
+
 void HttpConnection::removeTimer() {
-    auto conn_sptr = tcp_conn_wkptr.lock();
-    if (conn_sptr && !timer_wkptr_.expired()) {
-        // 清除定时器, 关闭tcp连接. 
-        LOG_TRACE << "HttpConnection::forceClose(): conn_sptr.use_count: " << conn_sptr.use_count();
-        LOG_TRACE << "HttpConnection::forceClose(): conn_sptr.get " << conn_sptr.get();
-        auto wheel = any_cast<unique_ptr<TimingWheel>>(conn_sptr->getOwnerLoop()->getMutableContext());
-        (*wheel)->remove(timer_wkptr_); 
+    if (auto timer = timer_wkptr_.lock()) {
+        timer->owner_wheel_->remove(timer); 
     }
 }
 
 void HttpConnection::handleMessage(Buffer* buf) {
-    // 重置超时时间
-    if (useTimeout_) {
-        restartTimer(); 
-    }
+    restartTimer(); 
     size_t size = buf->readableBytes(); 
     size_t parsed_size = 0; 
     auto ret = parser_.parse(buf->peek(), size, parsed_size);
@@ -292,9 +284,8 @@ void HttpConnection::sendResponse(const HttpResponse& response) {
     if (!parser_.isKeepAlive() || response.getCode() == HttpStatusCode::BadRequest) {
         shutdown();
         forceClose();
-    } else if (useTimeout_) {
-        restartTimer(); 
     }
+    restartTimer(); 
 }
 
 

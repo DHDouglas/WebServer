@@ -3,6 +3,7 @@
 #include <getopt.h>
 #include <linux/limits.h>    // for PATH_MAX
 #include <iostream>
+#include <string>
 #include <unistd.h>
 
 #include "log_file.h"
@@ -111,13 +112,12 @@ string Config::ensureAbsoluteRootPath(string path) {
 
 
 void Config::printArgs() const {
-    constexpr double eps = 1e-9; 
     cout << "Options:\n"
          << "  ip: " << (ip.empty() ? "0.0.0.0" : ip) << "\n"
          << "  port: " << port << "\n"
          << "  the number of IO threads: "  << num_thread << "\n"
          << "  the web root path: " << root_path_ << "\n"
-         << "  the timeout seconds of http connection: " << (fabs(timeout_seconds_) < eps ? "disable" : to_string(timeout_seconds_))  << "\n"
+         << "  the timeout seconds of http connection: " << (timeout_seconds_ > 0 ? to_string(timeout_seconds_) : "disable") << "\n"
          << "  the maximum amount of concurrent connections: " << max_connections_ << "\n"
          << "  log enable: " << log_enable << "\n";
     

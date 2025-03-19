@@ -28,7 +28,7 @@ public:
     // Web资源文件根目录
     std::string root_path_ = "./resources";
     // HttpConnection的超时时间
-    double timeout_seconds_ = 30;
+    int timeout_seconds_ = 30;
     // 允许的最大连接数量
     size_t max_connections_ = 10000; 
     // 是否输出日志

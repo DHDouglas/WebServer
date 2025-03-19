@@ -27,9 +27,6 @@ private:
     void onConnection(const TcpConnectionPtr& conn); 
     void onMessage(const TcpConnectionPtr& conn, Buffer* buf, Timestamp receive_time); 
 
-    // 定时器超时回调.
-    void onTimer(Any& data);
-
     // 日志输出回调, 指定输出位置. (stdout 或 )
     void logOutputToFile(const char* msg, int len); 
 
