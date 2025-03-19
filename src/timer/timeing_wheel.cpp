@@ -17,13 +17,14 @@ static TimingWheel::Callback callback_;
 TimingWheel::Entry::Entry(TimingWheel* wheel, Any data)
     :owner_wheel_(wheel),
     data_(std::move(data)),
-    bucket_num_(-1)
+    last_bucket_idx_(-1),
+    valid(true)
 { }
 
 TimingWheel::Entry::~Entry() {
-    // if (owner_wheel_ && owner_wheel_->callback_) {
-    //     owner_wheel_->callback_(data_); 
-    // }
+    if (valid && owner_wheel_ && owner_wheel_->callback_) {
+        owner_wheel_->callback_(data_); 
+    }
 }
 
 TimingWheel::TimingWheel(EventLoop* loop, int idle_seconds, Callback cb)
@@ -50,16 +51,10 @@ void TimingWheel::update(const EntryWeakPtr& entry_wkptr) {
 
 void TimingWheel::remove(const EntryWeakPtr& entry_wkptr)  {
     loop_->runInLoop(bind(&TimingWheel::removeInLoop, this, entry_wkptr)); 
-
 }
 
 void TimingWheel::onTimer() {
     LOG_TRACE << "TimingWheel::onTimer:  bucket[" << begin_idx_ << "]: "<< buckets_[begin_idx_].size();
-    for (auto& entry : buckets_[begin_idx_]) {
-        if (entry->owner_wheel_ && entry->owner_wheel_->callback_) {
-            entry->owner_wheel_->callback_(entry->data_); 
-        }
-    }
     buckets_[begin_idx_].clear();  
     begin_idx_ = (begin_idx_ + 1) % idle_seconds_;
     end_idx_ = (end_idx_ + 1) % idle_seconds_;
@@ -69,19 +64,14 @@ void TimingWheel::onTimer() {
 void TimingWheel::insertInLoop(const EntryPtr& ptr) {
     loop_->assertInLoopThread(); 
     buckets_[end_idx_].push_back(ptr); 
-    ptr->bucket_num_ = end_idx_;
-    ptr->pos_ = --buckets_[end_idx_].end();
+    ptr->last_bucket_idx_ = end_idx_;
 }
 
 void TimingWheel::updateInLoop(const EntryWeakPtr& entry_wkptr) {
     loop_->assertInLoopThread(); 
     if (auto ptr = entry_wkptr.lock()) {
-        int ori_idx = ptr->bucket_num_; 
-        if (ori_idx != end_idx_) {
-            buckets_[ori_idx].erase(ptr->pos_); 
+        if (ptr->valid && ptr->last_bucket_idx_ != end_idx_) {
             buckets_[end_idx_].push_back(ptr);
-            ptr->bucket_num_ = end_idx_;
-            ptr->pos_ = --buckets_[end_idx_].end();
         }
     }
 }
@@ -89,7 +79,6 @@ void TimingWheel::updateInLoop(const EntryWeakPtr& entry_wkptr) {
 void TimingWheel::removeInLoop(const EntryWeakPtr& entry_wkptr) {
     loop_->assertInLoopThread(); 
     if (auto ptr = entry_wkptr.lock()) {
-        int ori_idx = ptr->bucket_num_; 
-        buckets_[ori_idx].erase(ptr->pos_); 
+        ptr->valid = false;  
     }
 }

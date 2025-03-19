@@ -15,7 +15,6 @@ public:
     struct Entry; 
     using EntryPtr = std::shared_ptr<Entry>;
     using EntryWeakPtr = std::weak_ptr<Entry>;  
-    using Pos = std::list<EntryPtr>::const_iterator;
     using Buckets = std::vector<std::list<EntryPtr>>; 
     using Callback = std::function<void(Any& data)>; 
     using BaseTimer = std::weak_ptr<Timer>; 
@@ -24,9 +23,9 @@ public:
         explicit Entry(TimingWheel* wheel, Any data); 
         ~Entry();
         TimingWheel* owner_wheel_;
-        Any data_;           // 任意类型数据
-        int bucket_num_;     // 记录Entry所在槽
-        Pos pos_;            // 记录Entry在槽中的位置
+        Any data_;             // 任意类型数据
+        int last_bucket_idx_;  // 记录最后一次插入的槽位
+        bool valid;            // 标记是否有效.
     };
 
 public:
