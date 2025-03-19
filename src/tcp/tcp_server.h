@@ -59,7 +59,7 @@ public:
     void setThreadNum(int num_threads);
     void setThreadInitCallback(const ThreadInitCallback& cb) { threadInitCallback_ = cb; }
     /// valid after calling start()
-    std::shared_ptr<EventLoopThreadPool> threadPool() { return eventloop_thread_pool_; }
+    std::shared_ptr<EventLoopThreadPool> getEventLoopPool() { return eventloop_thread_pool_; }
 
     std::string getIpPort() { return ip_port_; }
     std::string getName() { return name_;  }

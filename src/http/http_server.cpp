@@ -1,5 +1,6 @@
 #include "http_server.h"
 
+#include <cmath>
 #include <functional>
 
 #include "http_connection.h"
@@ -7,6 +8,7 @@
 #include "logger.h"
 #include "timestamp.h"
 #include "any.h"
+#include "timing_wheel.h"
 
 using namespace std;
 
@@ -51,7 +53,21 @@ void HttpServer::start() {
         async_logger_->start(); 
     }
     tcp_server_.start();
+    if (fabs(config_.timeout_seconds_) > 1e-9) {
+        // 各线程运行时间轮.
+        auto loops = tcp_server_.getEventLoopPool()->getAllLoops(); 
+        for (auto& loop : loops) {
+            loop->setContext(make_unique<TimingWheel>(loop, config_.timeout_seconds_, bind(&HttpServer::onTimer, this, placeholders::_1)));
+        }
+    }
     loop_.loop();
+}
+
+void HttpServer::onTimer(Any& data) {
+    auto conn_wkptr = any_cast<weak_ptr<TcpConnection>>(&data); 
+    if (auto conn_sptr = (*conn_wkptr).lock()) {
+        conn_sptr->forceClose(); 
+    }
 }
 
 

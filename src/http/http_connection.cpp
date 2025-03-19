@@ -16,6 +16,7 @@
 #include "logger.h"
 #include "http_message.h"
 #include "timestamp.h"
+#include "timing_wheel.h"
 
 
 const unordered_map<HttpStatusCode, string> ERROR_RET_FILE = {
@@ -52,8 +53,8 @@ HttpConnection::HttpConnection(std::weak_ptr<TcpConnection> tcp_conn,
 {
     if (useTimeout_) {
         if (auto conn_sptr = tcp_conn_wkptr.lock()) {
-            timer_wkptr_ = conn_sptr->getOwnerLoop()->runAfter(
-                timeout_duration_, bind(&HttpConnection::handleTimer, tcp_conn_wkptr));
+            auto wheel = any_cast<unique_ptr<TimingWheel>>(conn_sptr->getOwnerLoop()->getMutableContext());
+            timer_wkptr_ = (*wheel)->insert(tcp_conn); 
         }
     } 
 }
@@ -78,11 +79,9 @@ HttpConnection::~HttpConnection() {
 
 void HttpConnection::restartTimer() {
     auto conn_sptr = tcp_conn_wkptr.lock();
-    auto timer_sptr = timer_wkptr_.lock(); 
-    if (conn_sptr && timer_sptr) {
-        conn_sptr->getOwnerLoop()->removeTimer(timer_wkptr_); 
-        timer_wkptr_ = conn_sptr->getOwnerLoop()->runAfter(
-            timeout_duration_, bind(&HttpConnection::handleTimer, tcp_conn_wkptr));
+    if (conn_sptr && !timer_wkptr_.expired()) {
+        auto wheel = any_cast<unique_ptr<TimingWheel>>(conn_sptr->getOwnerLoop()->getMutableContext());
+        (*wheel)->update(timer_wkptr_); 
     } 
 }
 
@@ -101,15 +100,14 @@ void HttpConnection::forceClose() const {
 
 void HttpConnection::removeTimer() {
     auto conn_sptr = tcp_conn_wkptr.lock();
-    auto timer_sptr = timer_wkptr_.lock(); 
-    if (conn_sptr && timer_sptr) {
+    if (conn_sptr && !timer_wkptr_.expired()) {
         // 清除定时器, 关闭tcp连接. 
         LOG_TRACE << "HttpConnection::forceClose(): conn_sptr.use_count: " << conn_sptr.use_count();
         LOG_TRACE << "HttpConnection::forceClose(): conn_sptr.get " << conn_sptr.get();
-        conn_sptr->getOwnerLoop()->removeTimer(timer_wkptr_); 
+        auto wheel = any_cast<unique_ptr<TimingWheel>>(conn_sptr->getOwnerLoop()->getMutableContext());
+        (*wheel)->remove(timer_wkptr_); 
     }
 }
-
 
 void HttpConnection::handleMessage(Buffer* buf) {
     // 重置超时时间

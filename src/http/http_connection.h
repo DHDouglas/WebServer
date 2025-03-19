@@ -8,7 +8,7 @@
 #include "timer.h"
 #include "http_message.h"
 #include "http_parser.h"
-
+#include "timing_wheel.h"
 
 class HttpConnection {
 public:
@@ -48,7 +48,8 @@ private:
     bool useTimeout_; 
     std::string root_path_; 
     std::weak_ptr<TcpConnection> tcp_conn_wkptr; 
-    std::weak_ptr<Timer> timer_wkptr_; 
+    // std::weak_ptr<Timer> timer_wkptr_; 
+    TimingWheel::EntryWeakPtr timer_wkptr_; 
 };
 
 
