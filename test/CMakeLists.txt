@@ -79,6 +79,9 @@ target_link_libraries(http_server_unittest PRIVATE MyObjects)
 target_link_libraries(http_server_unittest PRIVATE gtest gtest_main pthread)
 add_test(NAME http_server_unittest COMMAND http_server_unittest)
 
+add_executable(timewheel_test timewheel_test.cpp)
+target_link_libraries(timewheel_test PRIVATE MyObjects)
+
 
 add_custom_target(all_test_exec DEPENDS
     eventloop1_test
@@ -105,4 +108,5 @@ add_custom_target(all_test_exec DEPENDS
     config_test
     any_class_test
     http_server_unittest
+    timewheel_test
 )

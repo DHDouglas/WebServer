@@ -8,6 +8,7 @@
 
 #include "timer.h"
 #include "timestamp.h"
+#include "any.h"
 
 class Channel; 
 
@@ -41,6 +42,10 @@ public:
     static thread_local EventLoop* t_loopInThisThread;  
     static EventLoop* getEventLoopInThisThread() { return t_loopInThisThread; }
 
+    // 归属当前EventLoop的额外上下文
+    void setContext(const Any& context) { context_ = context; }
+    Any* getMutableContext() { return &context_; }
+
 private:
     void doPendingFunctors();        
 
@@ -71,4 +76,5 @@ private:
     
     std::mutex mtx_; 
     std::vector<Functor> pending_functors_;  // guarded by mutex_
+    Any context_;
 };

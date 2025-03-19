@@ -1,3 +1,4 @@
+#pragma once
 #include <memory>
 #include <vector>
 
@@ -16,13 +17,12 @@ public:
     void setThreadNum(int num_thread) { num_threads_ = num_thread; }
     void start(const ThreadInitCallback& cb = ThreadInitCallback());
 
-    // valid after calling start()
-    /// round-robin
-    EventLoop* getNextLoop();
+    // the two function valid after calling start()
+    EventLoop* getNextLoop();    // round-robin
+    std::vector<EventLoop*> getAllLoops() { return loops_;  } 
 
     bool isStarted() const { return started_; }
     const std::string& getName() const { return name_; }
-
 
 private:
     EventLoop* base_loop_;
@@ -31,6 +31,6 @@ private:
     int num_threads_;
     int next_;  
     std::vector<std::unique_ptr<EventLoopThread>> threads_; 
-    std::vector<EventLoop*> loops_;  // 为什么既持有EventLoopThread, 又还要持有其指针? 
+    std::vector<EventLoop*> loops_;
 
 };
