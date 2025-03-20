@@ -36,6 +36,8 @@ public:
     void setConnectionCallback(const ConnectionCallback& cb) { connCallback_ = cb;  }
     // Not thread safe.
     void setMessageCallback(const MessageCallback& cb) { msgCallback_ = cb; }
+    // Not thread safe.
+    void setWriteCompleteCallback(const WriteCompleteCallback& cb) { writeCompleteCallback_ = cb;}
 
     // Not thread safe, but in loop.
     void newConnection(int sockfd, const InetAddress& addr);  

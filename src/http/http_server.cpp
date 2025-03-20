@@ -1,11 +1,11 @@
 #include "http_server.h"
 
-#include <cmath>
 #include <functional>
 
 #include "http_connection.h"
 #include "inet_address.h"
 #include "logger.h"
+#include "tcp_server.h"
 #include "timestamp.h"
 #include "any.h"
 #include "timing_wheel.h"
@@ -44,6 +44,8 @@ HttpServer::HttpServer(const Config& config)
     tcp_server_.setMessageCallback(
         bind(&HttpServer::onMessage, this, placeholders::_1,
              placeholders::_2, placeholders::_3));
+    tcp_server_.setWriteCompleteCallback(
+        bind(&HttpServer::onWriteComplete, this, placeholders::_1));
     // HttpConn配置
     HttpConnection::setRootPath(config.root_path_); 
     HttpConnection::setTimeout(config.timeout_seconds_); 
@@ -102,6 +104,11 @@ void HttpServer::onMessage(const TcpServer::TcpConnectionPtr& tcp_conn,
     (*http_conn)->handleMessage(buf);
 }
 
+void HttpServer::onWriteComplete(const TcpServer::TcpConnectionPtr& tcp_conn) {
+    auto http_conn = any_cast<shared_ptr<HttpConnection>>(tcp_conn->getMutableContext());
+    assert(http_conn);
+    (*http_conn)->onWriteComplete();
+}
 
 void HttpServer::logOutputToFile(const char* msg, int len) {
     async_logger_->append(msg, len); 

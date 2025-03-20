@@ -26,6 +26,7 @@ private:
     // 注册于TcpConnection中的回调
     void onConnection(const TcpConnectionPtr& conn); 
     void onMessage(const TcpConnectionPtr& conn, Buffer* buf, Timestamp receive_time); 
+    void onWriteComplete(const TcpServer::TcpConnectionPtr& conn);
 
     // 日志输出回调, 指定输出位置. (stdout 或 )
     void logOutputToFile(const char* msg, int len); 

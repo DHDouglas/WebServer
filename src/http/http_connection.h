@@ -30,6 +30,8 @@ public:
     static void setTimeout(int seconds); 
     // 定时器回调.
     static void onTimer(Any& context);
+    // 消息完整发送时的回调(异步)
+    void onWriteComplete(); 
 
 private:
     // 根据URL执行不同业务逻辑 
@@ -41,6 +43,7 @@ private:
     void errorResponse(HttpStatusCode code);
     // 发送报文
     void sendResponse(const HttpResponse& response);     // base.
+
     // 仅关闭写端. 
     void shutdown() const;
     // 断开连接

@@ -281,8 +281,11 @@ void HttpConnection::sendResponse(const HttpResponse& response) {
         size_t iovcnt = response.encode(vecs, IOV_MAX);
         tcp_conn_sptr->send(vecs, iovcnt);
     }
-    // 短连接下, 服务器端回发响应报文后关闭写端.
-    if (!parser_.isKeepAlive() || response.getCode() == HttpStatusCode::BadRequest) {
+}
+
+void HttpConnection::onWriteComplete() {
+    // 短连接下, 服务器端回发完响应报文后关闭写端.
+    if (!parser_.isKeepAlive() || !parser_.parsingCompletion()) {
         shutdown();
         forceClose();
     }
