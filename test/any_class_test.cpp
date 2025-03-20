@@ -16,11 +16,7 @@ void onConnection(const TcpConnection::TcpConnectionPtr& conn) {
             CurrentThread::getTid(), 
             conn->getName().c_str(), 
             conn->getPeerAddress().getPort());
-        conn->setContext(make_shared<HttpConnection>(
-            conn, 
-            "./resources", 
-            Timestamp::secondsToDuration(20)
-        ));
+        conn->setContext(make_shared<HttpConnection>(conn));
     } else {
         printf("onConnection(): tid=%d connection [%s] is down\n",
             CurrentThread::getTid(), 

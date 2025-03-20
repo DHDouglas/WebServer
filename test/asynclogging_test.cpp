@@ -1,5 +1,6 @@
 #include <mutex>
 #include <memory>
+#include <unistd.h>
 
 #include "logger.h"
 #include "async_logger.h"

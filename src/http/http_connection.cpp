@@ -42,6 +42,8 @@ string getErrorCodeRerturnFile(HttpStatusCode code) {
     return it->second; 
 }
 
+static vector<char> FIX_MSG(5 * 1024, 'A');  // 5KB
+
 std::string HttpConnection::root_path_; 
 int HttpConnection::timeout_seconds_;  
 
@@ -116,11 +118,6 @@ void HttpConnection::handleMessage(Buffer* buf) {
         // 解析得到完整HTTP请求报文, 处理请求.
         LOG_TRACE << "HttpServer::onMessage http request parsing successed"; 
         handleRequest();
-        // ! For test: 直接回传OK报文.
-        // if (auto tcp_conn_sptr = tcp_conn_wkptr.lock()) {
-        //     tcp_conn_sptr->send("HTTP/1.0 200 OK\r\n\r\n");
-        //     forceClose();
-        // }
     } else if (ret == R::ERROR) {
         LOG_WARN << "HttpServer::onMessage http request parsing error"; 
         errorResponse(HttpStatusCode::BadRequest);
@@ -137,6 +134,10 @@ void HttpConnection::handleRequest() {
     if (path == "/benchmark") {
         responseMsg("Hello World!", 12, HttpStatusCode::OK);  // 不取文件, 省略磁盘I/O
         return; 
+    }
+    if (path == "/benchmark-5KB") {
+        responseMsg(FIX_MSG.data(), FIX_MSG.size(), HttpStatusCode::OK);  // 5KB
+        return;
     }
     if (path == "/nocontent") {
         responseMsg(nullptr, 0, HttpStatusCode::NoContent);

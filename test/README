@@ -21,3 +21,13 @@
 - http_parser_with_tcp_server_test
 - httpserver_demo_test
 - config_test
+- http_server_unittest
+- timewheel_test
+
+其中, 共有4个基于GoogleTest的单元测试:
+- inet_address_unittest
+- buffer_unittest
+- http_parser_unittest
+- http_server_unittest
+
+其余为一些功能测试的简单程序。

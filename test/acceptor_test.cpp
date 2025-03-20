@@ -1,5 +1,7 @@
 #include <iostream>
 #include <netinet/in.h>
+#include <cstring>
+#include <unistd.h>
 
 #include "eventloop.h"
 #include "acceptor.h"

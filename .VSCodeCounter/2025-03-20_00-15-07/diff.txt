@@ -1,0 +1,51 @@
+Date : 2025-03-20 00:15:07
+Directory : /home/yht/Projects/MyTinyWebServer/src
+Total : 18 files,  -235 codes, -15 comments, -55 blanks, all -305 lines
+
+Languages
++----------+------------+------------+------------+------------+------------+
+| language | files      | code       | comment    | blank      | total      |
++----------+------------+------------+------------+------------+------------+
+| C++      |         18 |       -235 |        -15 |        -55 |       -305 |
++----------+------------+------------+------------+------------+------------+
+
+Directories
++-------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                    | files      | code       | comment    | blank      | total      |
++-------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                       |         18 |       -235 |        -15 |        -55 |       -305 |
+| CGImysql                                                                |          2 |       -127 |        -10 |        -39 |       -176 |
+| base                                                                    |          1 |        -32 |         -3 |         -7 |        -42 |
+| epoller                                                                 |          1 |          1 |          0 |          0 |          1 |
+| eventloop                                                               |          2 |          6 |          0 |          0 |          6 |
+| http                                                                    |          4 |          6 |          3 |          5 |         14 |
+| logger                                                                  |          1 |          1 |          0 |          0 |          1 |
+| tcp                                                                     |          1 |          1 |          0 |          0 |          1 |
+| threadpool                                                              |          3 |       -206 |        -14 |        -38 |       -258 |
+| timer                                                                   |          3 |        115 |          9 |         24 |        148 |
++-------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++-------------------------------------------------------------------------+----------+------------+------------+------------+------------+
+| filename                                                                | language | code       | comment    | blank      | total      |
++-------------------------------------------------------------------------+----------+------------+------------+------------+------------+
+| /home/yht/Projects/MyTinyWebServer/src/CGImysql/sql_connection_pool.cpp | C++      |        -84 |         -8 |        -25 |       -117 |
+| /home/yht/Projects/MyTinyWebServer/src/CGImysql/sql_connection_pool.h   | C++      |        -43 |         -2 |        -14 |        -59 |
+| /home/yht/Projects/MyTinyWebServer/src/base/weak_callback.h             | C++      |        -32 |         -3 |         -7 |        -42 |
+| /home/yht/Projects/MyTinyWebServer/src/epoller/epoller.cpp              | C++      |          1 |          0 |          0 |          1 |
+| /home/yht/Projects/MyTinyWebServer/src/eventloop/eventloop.h            | C++      |          4 |          1 |          1 |          6 |
+| /home/yht/Projects/MyTinyWebServer/src/eventloop/eventloop_threadpool.h | C++      |          2 |         -1 |         -1 |          0 |
+| /home/yht/Projects/MyTinyWebServer/src/http/http_connection.cpp         | C++      |        -11 |         -1 |          1 |        -11 |
+| /home/yht/Projects/MyTinyWebServer/src/http/http_connection.h           | C++      |          5 |          0 |          3 |          8 |
+| /home/yht/Projects/MyTinyWebServer/src/http/http_server.cpp             | C++      |         11 |          4 |          0 |         15 |
+| /home/yht/Projects/MyTinyWebServer/src/http/http_server.h               | C++      |          1 |          0 |          1 |          2 |
+| /home/yht/Projects/MyTinyWebServer/src/logger/logger.cpp                | C++      |          1 |          0 |          0 |          1 |
+| /home/yht/Projects/MyTinyWebServer/src/tcp/tcp_server.cpp               | C++      |          1 |          0 |          0 |          1 |
+| /home/yht/Projects/MyTinyWebServer/src/threadpool/depre_threadpool.h    | C++      |       -125 |         -8 |        -19 |       -152 |
+| /home/yht/Projects/MyTinyWebServer/src/threadpool/threadpool.cpp        | C++      |        -37 |          0 |         -7 |        -44 |
+| /home/yht/Projects/MyTinyWebServer/src/threadpool/threadpool.h          | C++      |        -44 |         -6 |        -12 |        -62 |
+| /home/yht/Projects/MyTinyWebServer/src/timer/timeing_wheel.cpp          | C++      |         70 |          9 |         16 |         95 |
+| /home/yht/Projects/MyTinyWebServer/src/timer/timer.cpp                  | C++      |          1 |          0 |          0 |          1 |
+| /home/yht/Projects/MyTinyWebServer/src/timer/timing_wheel.h             | C++      |         44 |          0 |          8 |         52 |
+| Total                                                                   |          |       -235 |        -15 |        -55 |       -305 |
++-------------------------------------------------------------------------+----------+------------+------------+------------+------------+

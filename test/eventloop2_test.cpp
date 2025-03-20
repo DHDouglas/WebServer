@@ -1,5 +1,7 @@
 #include "eventloop.h"
 
+#include <thread.h>
+
 EventLoop* g_loop; 
 
 /* 测试EventLoop.loop()只能在其所属线程被调用 */

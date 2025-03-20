@@ -1,5 +1,7 @@
 #include <cstdio>
+#include <unistd.h>
 
+#include "eventloop.h"
 #include "logger.h"
 #include "tcp_server.h"
 #include "buffer.h"
