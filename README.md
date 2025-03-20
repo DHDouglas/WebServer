@@ -14,7 +14,7 @@
 ## 1.2 技术要点
 
 - **Reactor 并发模型**
-	- **多 Reactor & 多线程**，"**one loop per thread**" 方案: 每个线程运行一个事件循环, 主线程作为Acceptor, 从线程负责IO
+	- **主-从Reactor**，即 "**one loop per thread**" 方案
 	- **I/O 多路复用**： 非阻塞 IO + epoll（水平触发 LT)
 	- **事件驱动**，统一事件源：通用定时器基于单个 timerfd 实现，IO 线程间通过 eventfd 进行异步通知
 - **基于红黑树的通用定时器**  + **利用 "时间轮" 方式断开超时的空闲连接**
@@ -42,16 +42,16 @@
 
 ## 1.3 主体框架
 
-=> 此处插入图
-
-
-
-多 Reactor & 多线程，"one loop per thread" 方案，即主线程 & 各个 IO 线程上**分别运行一个独立的事件循环**。
-
-- 主线程即 Main Reactor：仅负责 **accept** 请求，以 Round-Robin 方式将连接分发&绑定到各个 I/O 线程。
-- I/O线程即 subReactor：负责其所管理的 TCP 连接上的所有I/O事件。
+<img src="./assets/README.assets/image-TinyWebServer.png" alt="image-TinyWebServer" width="100%" />
 
 <br>
+
+并发模型为"主从Reactor"，即 "one loop per thread" 方案，即主线程 & 各个 IO 线程上 **分别运行一个独立的事件循环**。
+
+- 主线程即 Main Reactor：仅负责 **accept** 请求，以 Round-Robin 方式将连接分发&绑定到各个 I/O 线程。
+- I/O线程即 sub Reactor：负责其所管理的 TCP 连接上的所有I/O事件。
+
+
 
 ### 模块划分
 
@@ -187,7 +187,7 @@
 
 <br>
 
-<img src="./assets/README.assets/image-20250320111955203.png" alt="image-20250320111955203" width="90%" />
+<img src="./assets/README.assets/image-20250320203448285.png" alt="image-20250320203448285" width="90%" />
 
 <br>
 <br>
@@ -202,8 +202,6 @@
 - 阿里云服务器 ECS：2核 2G； Ubuntu 22.04.4 LTS
 - 笔记本电脑上运行的VMware虚拟机: 8核 8G;   Ubuntu 22.04.3 LTS
 	- (笔记本CPU是 Intel 酷睿 i7-14700HX)
-
-测两个环境是因为云服务器CPU只有2核, 跑压测时wrk本身占一半, 故对WebServer的多线程性能体现不明显。而虚拟机环境下磁盘I/O性能又太差。
 
 
 ## 4.2 测试工具

@@ -1,10 +1,10 @@
 # Details
 
-Date : 2025-03-20 00:15:07
+Date : 2025-03-20 20:32:01
 
 Directory /home/yht/Projects/MyTinyWebServer/src
 
-Total : 49 files,  4354 codes, 284 comments, 918 blanks, all 5556 lines
+Total : 49 files,  4371 codes, 281 comments, 921 blanks, all 5573 lines
 
 [Summary](results.md) / Details / [Diff Summary](diff.md) / [Diff Details](diff-details.md)
 
@@ -34,14 +34,14 @@ Total : 49 files,  4354 codes, 284 comments, 918 blanks, all 5556 lines
 | [src/eventloop/eventloop\_thread.h](/src/eventloop/eventloop_thread.h) | C++ | 23 | 0 | 8 | 31 |
 | [src/eventloop/eventloop\_threadpool.cpp](/src/eventloop/eventloop_threadpool.cpp) | C++ | 39 | 1 | 9 | 49 |
 | [src/eventloop/eventloop\_threadpool.h](/src/eventloop/eventloop_threadpool.h) | C++ | 26 | 1 | 9 | 36 |
-| [src/http/http\_connection.cpp](/src/http/http_connection.cpp) | C++ | 272 | 20 | 35 | 327 |
-| [src/http/http\_connection.h](/src/http/http_connection.h) | C++ | 48 | 11 | 13 | 72 |
+| [src/http/http\_connection.cpp](/src/http/http_connection.cpp) | C++ | 279 | 15 | 37 | 331 |
+| [src/http/http\_connection.h](/src/http/http_connection.h) | C++ | 49 | 12 | 14 | 75 |
 | [src/http/http\_message.cpp](/src/http/http_message.cpp) | C++ | 234 | 7 | 42 | 283 |
 | [src/http/http\_message.h](/src/http/http_message.h) | C++ | 109 | 1 | 27 | 137 |
 | [src/http/http\_parser.cpp](/src/http/http_parser.cpp) | C++ | 313 | 14 | 54 | 381 |
 | [src/http/http\_parser.h](/src/http/http_parser.h) | C++ | 83 | 0 | 14 | 97 |
-| [src/http/http\_server.cpp](/src/http/http_server.cpp) | C++ | 87 | 8 | 14 | 109 |
-| [src/http/http\_server.h](/src/http/http_server.h) | C++ | 27 | 2 | 10 | 39 |
+| [src/http/http\_server.cpp](/src/http/http_server.cpp) | C++ | 94 | 8 | 14 | 116 |
+| [src/http/http\_server.h](/src/http/http_server.h) | C++ | 28 | 2 | 10 | 40 |
 | [src/logger/async\_logger.cpp](/src/logger/async_logger.cpp) | C++ | 118 | 7 | 17 | 142 |
 | [src/logger/async\_logger.h](/src/logger/async_logger.h) | C++ | 35 | 1 | 6 | 42 |
 | [src/logger/log\_file.cpp](/src/logger/log_file.cpp) | C++ | 157 | 6 | 27 | 190 |
@@ -54,7 +54,7 @@ Total : 49 files,  4354 codes, 284 comments, 918 blanks, all 5556 lines
 | [src/tcp/tcp\_connection.cpp](/src/tcp/tcp_connection.cpp) | C++ | 311 | 33 | 38 | 382 |
 | [src/tcp/tcp\_connection.h](/src/tcp/tcp_connection.h) | C++ | 73 | 11 | 23 | 107 |
 | [src/tcp/tcp\_server.cpp](/src/tcp/tcp_server.cpp) | C++ | 72 | 11 | 21 | 104 |
-| [src/tcp/tcp\_server.h](/src/tcp/tcp_server.h) | C++ | 50 | 18 | 18 | 86 |
+| [src/tcp/tcp\_server.h](/src/tcp/tcp_server.h) | C++ | 51 | 19 | 18 | 88 |
 | [src/timer/timeing\_wheel.cpp](/src/timer/timeing_wheel.cpp) | C++ | 70 | 9 | 16 | 95 |
 | [src/timer/timer.cpp](/src/timer/timer.cpp) | C++ | 111 | 13 | 19 | 143 |
 | [src/timer/timer.h](/src/timer/timer.h) | C++ | 55 | 1 | 15 | 71 |
