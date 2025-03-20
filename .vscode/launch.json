@@ -1,0 +1,152 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        // C++ 单文件编译
+        {
+            "name": "C++ (Single File)",  // 配置名称，将会在启动配置的下拉菜单中显示 
+            "preLaunchTask": "build C++ file",  //与tasks.json中任务的label一致
+            "type": "cppdbg",      // 配置类型. 对C++而言是`cppdbg`; 
+            "request": "launch",   // 请求类型，为launch或attach
+            "program": "${workspaceFolder}/tmp/tmp.exe",  // 启动调试时，所需运行的可执行文件的路径。
+            "args": [],            // 程序调试时传递给程序的命令行参数，一般设为空即可 
+            "stopAtEntry": false,  // 是否在程序入口处触发中断，一般设置为false.
+            // "cwd": "${workspaceFolder}",  // 调试程序时的工作目录，一般为${workspaceFolder}
+            "cwd": "${fileDirname}",
+            "environment": [],     // 环境变量
+            "externalConsole": false,  // 调试时是否启用外部控制台(例如Windows下的CMD窗口)
+            "MIMode": "gdb",          // 使用的调试器
+            "miDebuggerPath": "/usr/bin/gdb",  // 调试器所在路径
+            "miDebuggerArgs": "-q -ex quit; wait() { fg >/dev/null; }; /bin/gdb -q --interpreter=mi",  // 远程开发环境下, 清除终端输出后附加的调试信息
+            "setupCommands": [        // 调试器设置命令
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",  // 为gdb启用整齐打印
+                    "ignoreFailures": true,
+                }
+            ]
+        },
+        // C++ 多文件编译
+        {
+            "name": "C++ (Multi-files)",
+            "preLaunchTask": "build C++ multi files",  
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/tmp/tmp.exe",
+            "args": [],
+            "stopAtEntry": false,
+            // "cwd": "${workspaceFolder}",
+            "cwd": "${fileDirname}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerPath": "/usr/bin/gdb", 
+            "miDebuggerArgs": "-q -ex quit; wait() { fg >/dev/null; }; /bin/gdb -q --interpreter=mi",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true,
+                }
+            ]
+        }, 
+        // C++ 多文件编译
+        {
+            "name": "C++ (Project)",
+            "preLaunchTask": "build C++ project",  
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/tmp/tmp.exe",
+            "args": [],
+            "stopAtEntry": false,
+            // "cwd": "${workspaceFolder}",
+            "cwd": "${fileDirname}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerPath": "/usr/bin/gdb", 
+            "miDebuggerArgs": "-q -ex quit; wait() { fg >/dev/null; }; /bin/gdb -q --interpreter=mi",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true,
+                }
+            ]
+        }, 
+        // C 单文件编译
+        {
+            "name": "C (Single File)",  // 配置名称，将会在启动配置的下拉菜单中显示 
+            "preLaunchTask": "build C file",  //与tasks.json中任务的label一致
+            "type": "cppdbg",      // 配置类型. 对C++而言是`cppdbg`; 
+            "request": "launch",   // 请求类型，为launch或attach
+            "program": "${workspaceFolder}/tmp/tmp.exe",  // 启动调试时，所需运行的可执行文件的路径。
+            "args": [],            // 程序调试时传递给程序的命令行参数，一般设为空即可 
+            "stopAtEntry": false,  // 是否在程序入口处触发中断，一般设置为false.
+            // "cwd": "${workspaceFolder}",  // 调试程序时的工作目录，一般为${workspaceFolder}
+            "cwd": "${fileDirname}",
+            "environment": [],     // 环境变量
+            "externalConsole": false,  // 调试时是否启用外部控制台(例如Windows下的CMD窗口)
+            "MIMode": "gdb",          // 使用的调试器
+            "miDebuggerPath": "/usr/bin/gdb",  // 调试器所在路径
+            "miDebuggerArgs": "-q -ex quit; wait() { fg >/dev/null; }; /bin/gdb -q --interpreter=mi",  // 远程开发环境下, 清除终端输出后附加的调试信息
+            "setupCommands": [        // 调试器设置命令
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",  // 为gdb启用整齐打印
+                    "ignoreFailures": true,
+                }
+            ]
+        },
+        // C 多文件编译
+        {
+            "name": "C (Multi-files)",
+            "preLaunchTask": "build C multi files",  
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/tmp/tmp.exe",
+            "args": [],
+            "stopAtEntry": false,
+            // "cwd": "${workspaceFolder}",
+            "cwd": "${fileDirname}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerPath": "/usr/bin/gdb", 
+            "miDebuggerArgs": "-q -ex quit; wait() { fg >/dev/null; }; /bin/gdb -q --interpreter=mi",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true,
+                }
+            ]
+        }, 
+        // cpp 测试
+        {
+            "name": "C++ (Test)",
+            "preLaunchTask": "build c++ test program",  
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/tmp/test.exe",
+            "args": [],
+            "stopAtEntry": false,
+            // "cwd": "${workspaceFolder}",
+            "cwd": "${fileDirname}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerPath": "/usr/bin/gdb", 
+            "miDebuggerArgs": "-q -ex quit; wait() { fg >/dev/null; }; /bin/gdb -q --interpreter=mi",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true,
+                }
+            ]
+        }, 
+    ]
+}

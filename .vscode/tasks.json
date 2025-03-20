@@ -1,0 +1,173 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build C++ file",
+            "type": "cppbuild",
+            "command": "g++",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-std=c++14",
+                "-g",
+                "${file}",
+                "-o",
+                "${workspaceFolder}/tmp/tmp.exe"
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "g++: compile current active file",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "dedicated",
+                "showReuseMessage": true,
+                "clear": true
+            }
+        },
+        {
+            "label": "build C++ multi files",
+            "type": "cppbuild",
+            "command": "g++",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-std=c++14",
+                "-g",
+                "${fileDirname}/*.cpp",
+                "-I",
+                "${fileDirname}/include",
+                "-I",
+                "${fileDirname}/../include",
+                "-o",
+                "${workspaceFolder}/tmp/tmp.exe",
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build",
+            "detail": "g++: compile multi-files in current dir.",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "dedicated",
+                "showReuseMessage": true,
+                "clear": true
+            }
+        },
+        {
+            "label": "build C file",
+            "type": "cppbuild",
+            "command": "gcc",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-std=gnu11", 
+                "-g",
+                "${file}",
+                "-o",
+                "${workspaceFolder}/tmp/tmp.exe"
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "gcc: compile current active file",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "dedicated",
+                "showReuseMessage": true,
+                "clear": true
+            }
+        },
+        {
+            "label": "build C multi files",
+            "type": "cppbuild",
+            "command": "gcc",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-std=gnu11",
+                "-g",
+                "${fileDirname}/*.c",
+                "-I",
+                "${fileDirname}/include",
+                "-I",
+                "${fileDirname}/../include",
+                "-o",
+                "${workspaceFolder}/tmp/tmp.exe",
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build",
+            "detail": "g++: compile multi-files in current dir.",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "dedicated",
+                "showReuseMessage": true,
+                "clear": true
+            }
+        },
+        // cpp测试
+        {
+            "type": "cppbuild",
+            "label": "build c++ test program",
+            "command": "g++",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-std=c++14",
+                "-g",
+                "${file}",
+                "${fileDirname}/../*.cpp",
+                "-I",
+                "${fileDirname}/../",
+                "-o",
+                "${workspaceFolder}/tmp/test.exe",
+                "-pthread",
+                "-lgtest",
+                "-lgtest_main",
+                "-lgmock",
+                "-lgmock_main", 
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "test",
+            "detail": "g++: compile test program",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "dedicated",
+                "showReuseMessage": true,
+                "clear": true
+            }
+        },
+    ],
+}

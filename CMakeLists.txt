@@ -1,0 +1,30 @@
+cmake_minimum_required(VERSION 3.10.0)
+project(HttpServer VERSION 0.1.0 LANGUAGES C CXX)
+
+include(CTest)
+enable_testing()
+
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE "Release")
+endif()
+
+set(CXX_STANDARD 14)
+
+set(CXX_FLAGS
+    -Wall
+    -Wextra
+    -Werror
+)
+list(JOIN CXX_FLAGS " " CMAKE_CXX_FLAGS)
+
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
+set(CMAKE_CXX_FLAGS_RELEASE "-O2 -DNDEBUG")
+string(TOUPPER ${CMAKE_BUILD_TYPE} BUILD_TYPE)
+message(STATUS "CXX_FLAGS = " ${CMAKE_CXX_FLAGS} " " ${CMAKE_CXX_FLAGS_${BUILD_TYPE}})
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+
+add_subdirectory(src)
+add_subdirectory(test)

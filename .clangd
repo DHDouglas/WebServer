@@ -1,0 +1,6 @@
+CompileFlags:
+  Add: [-std=c++14, -Wall, -Wextra, -Werror]
+
+InlayHints:
+  Enabled: No
+  Designators: No
