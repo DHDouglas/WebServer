@@ -3,7 +3,7 @@
 # 默认参数
 THREADS=4           # wrk的线程数
 CONNECTIONS=1000    # wrk维持的并发连接数
-DURATION=10         # wrk压测持续时间(秒)
+DURATION=60         # wrk压测持续时间(秒)
 PORT=80             
 URL="/benchmark"
 KEEP_ALIVE=false    # 是否长连接

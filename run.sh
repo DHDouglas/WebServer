@@ -4,12 +4,12 @@ BUILD_TYPE="Release"
 
 IP=""                        # 监听地址. 为空时监听所有地址.
 PORT=80                      # 监听端口.
-THREAD_NUM=3                 # IO线程数量. 即subReactor数量, 为0则主线程兼做IO线程.
+THREAD_NUM=6                 # IO线程数量. 即subReactor数量, 为0则主线程兼做IO线程.
 ROOT_PATH="./resources"      # Web资源文件根路径.
-TIMEOUT=20                   # HttpConnection 超时时间.(为0时表示不启用定时器)
-MAX_CONN=10000               # 限制服务器允许的最大并发连接数
-LOG_ENABLE=1                 # 是否开启日志输出. 1开启, 0关闭.
-LOG_FNAME=""    # 日志文件名(为空时将输出到stdout)
+TIMEOUT=30                   # HttpConnection 超时时间.(为0时表示不启用定时器)
+MAX_CONN=15000               # 限制服务器允许的最大并发连接数
+LOG_ENABLE=0                 # 是否开启日志输出. 1开启, 0关闭.
+LOG_FNAME="HttpServerLog"    # 日志文件名(为空时将输出到stdout)
 LOG_DIR="./log"              # 日志目录
 LOG_LEVEL=2                  # 日志级别. 0:TRACE, 1:DEBUG, 2:INFO, 3:WARN, 4:ERROR, 5:FATAL.
 LOG_ROLLSIZE=500000000       # 单份日志文件字节上限(写满后切换新文件). 0.5GB.
